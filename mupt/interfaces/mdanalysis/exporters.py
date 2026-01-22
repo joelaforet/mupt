@@ -17,7 +17,7 @@ import numpy as np
 from typing import Optional
 
 from ...mupr.primitives import Primitive
-from ...mutils.SAAMR import _is_SAAMR_compliant
+from ...mutils.saamr import _is_SAAMR_compliant
 from ...chemistry.core import BOND_ORDER
 
 import logging
