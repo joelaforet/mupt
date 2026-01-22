@@ -374,3 +374,52 @@ def BPA_BPS_smiles() -> dict[str, str]:
         'bisphenol_A': '*-[O:1]c1ccc(cc1)C(-C)(-C)c1cc[c:2](cc1)-*',
         'tail': '*-[O:1]c1ccc(cc1)S(=O)(=O)c1ccc(cc1)[O:2]-[H]',
     }
+
+@pytest.fixture
+def polyethane_factory(polyethane_smiles):# -> Callable[..., Primitive]:
+    """
+    Factory for creating polyethane systems with configurable parameters.
+    
+    Returns a function that builds polyethane systems with specified:
+    - Chain length (number of repeat units)
+    - Number of chains
+    - Other build parameters
+    
+    Examples
+    --------
+    >>> def test_something(polyethane_factory):
+    ...     # Single 2-mer chain
+    ...     system1 = polyethane_factory(chain_len=2, n_chains=1)
+    ...     
+    ...     # Multiple chains with varying lengths
+    ...     system2 = polyethane_factory(
+    ...         chain_len_min=5,
+    ...         chain_len_max=10,
+    ...         n_chains=20
+    ...     )
+    """
+    def _make_polyethane(
+        chain_len: Optional[int] = None,
+        chain_len_min: Optional[int] = None,
+        chain_len_max: Optional[int] = None,
+        n_chains: int = 1,
+        random_seed: Optional[int] = 42,
+        **kwargs
+    ) -> Primitive:
+        # Handle single chain_len or min/max range
+        if chain_len is not None:
+            chain_len_min = chain_len_max = chain_len
+        elif chain_len_min is None or chain_len_max is None:
+            raise ValueError("Must provide either chain_len or both chain_len_min and chain_len_max")
+        
+        return build_polymer_system(
+            polyethane_smiles,
+            mid_distrib={'ethane': 1.0},
+            n_chains=n_chains,
+            chain_len_min=chain_len_min,
+            chain_len_max=chain_len_max,
+            random_seed=random_seed,
+            show_progress=False,
+            **kwargs
+        )
+    return _make_polyethane
