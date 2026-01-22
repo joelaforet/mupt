@@ -20,6 +20,11 @@ from ...mupr.primitives import Primitive
 from ...mutils.SAAMR import _is_SAAMR_compliant
 from ...chemistry.core import BOND_ORDER
 
+import logging
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+
 # DEV:JRL -> Debating whether to keep resname_map optional.
 def _pdb_resname(label: str, resname_map: Optional[dict]) -> str:
     """
