@@ -485,20 +485,20 @@ def BPA_BPS_factory(BPA_BPS_smiles):
             **kwargs
         )
     return _make_BPA_BPS
-
-
+    
 @pytest.fixture
-def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
+def single_polyethane_2mer(polyethane_factory) -> Primitive:
     """
-    Fixture providing a default BPA/BPS copolymer system Primitive.
+    Fixture providing a Primitive containing a single molecule of
+    polyethane composed of 2 repeat units of ethane.
     Primitive is intended to be SAAMR-compliant.
     [Universe -> Molecule -> Repeat-Units -> Atoms]
     
-    Default configuration: 5 chains, 5-10 repeat units per chain, 40% BPS / 60% BPA
+    * should have:
+    - 1 chain
+    - 2 repeat units
+    - 8 atoms
+    - 6 intra-residue bonds
+    - 1 inter-residue bond
     """
-    return BPA_BPS_factory(
-        chain_len_min=5,
-        chain_len_max=10,
-        n_chains=5,
-        bps_fraction=0.4
-    )
+    return polyethane_factory(chain_len=2, n_chains=1)
