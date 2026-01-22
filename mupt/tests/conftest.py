@@ -502,3 +502,20 @@ def single_polyethane_2mer(polyethane_factory) -> Primitive:
     - 1 inter-residue bond
     """
     return polyethane_factory(chain_len=2, n_chains=1)
+
+@pytest.fixture
+def single_polyethane_3mer(polyethane_factory) -> Primitive:
+    """
+    Fixture providing a Primitive containing a single molecule of
+    polyethane composed of 3 repeat units of ethane.
+    Primitive is intended to be SAAMR-compliant.
+    [Universe -> Molecule -> Repeat-Units -> Atoms]
+    
+    * should have:
+    - 1 chain
+    - 3 repeat units
+    - 14 atoms
+    - 11 intra-residue bonds
+    - 2 inter-residue bonds
+    """
+    return polyethane_factory(chain_len=3, n_chains=1)
