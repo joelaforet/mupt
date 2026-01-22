@@ -357,7 +357,7 @@ systems with custom parameters in your tests:
 
 @pytest.fixture
 def polyethane_smiles() -> dict[str, str]:
-    """Common SMILES definitions for polyethane systems."""
+    """SMILES definitions for polyethane"""
     return {
         'head': '[H:1]-[CH2:2]-*',
         'ethane': '*-[CH2:1][CH2:2]-*',
@@ -367,7 +367,7 @@ def polyethane_smiles() -> dict[str, str]:
 
 @pytest.fixture
 def BPA_BPS_smiles() -> dict[str, str]:
-    """Common SMILES definitions for BPA/BPS copolymer systems."""
+    """SMILES definitions for BPA/BPS copolymer"""
     return {
         'head': '[H]-[O:1]c1ccc(cc1)S(=O)(=O)c1cc[c:2](cc1)-*',
         'bisphenol_S': '*-[O:1]c1ccc(cc1)S(=O)(=O)c1cc[c:2](cc1)-*',
