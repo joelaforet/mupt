@@ -519,3 +519,16 @@ def single_polyethane_3mer(polyethane_factory) -> Primitive:
     - 2 inter-residue bonds
     """
     return polyethane_factory(chain_len=3, n_chains=1)
+
+@pytest.fixture
+def multi_polyethane_system(polyethane_factory) -> Primitive:
+    """
+    Fixture providing a multi-chain polyethane system with varying chain lengths.
+    Useful for testing system-level operations.
+    
+    * should have:
+    - 10 chains
+    - 5-10 repeat units per chain
+    - Variable total atoms/bonds depending on random chain lengths
+    """
+    return polyethane_factory(chain_len_min=5, chain_len_max=10, n_chains=10)
