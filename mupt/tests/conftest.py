@@ -313,6 +313,48 @@ def build_polymer_system(
     return univprim
 
 
+'''
+Factory Fixture Usage Examples
+-------------------------------
+The factory fixtures (polyethane_factory, BPA_BPS_factory) allow creating
+systems with custom parameters in your tests:
+
+    def test_with_custom_system(polyethane_factory):
+        # Single chain with specific length
+        small_system = polyethane_factory(chain_len=5, n_chains=1)
+        
+        # Multiple chains with length variation
+        large_system = polyethane_factory(
+            chain_len_min=10,
+            chain_len_max=20,
+            n_chains=50
+        )
+        
+        # Custom parameters (bond_length, angle_max_rad, etc.)
+        custom_system = polyethane_factory(
+            chain_len=10,
+            n_chains=5,
+            bond_length=2.0,
+            angle_max_rad=np.pi/6
+        )
+    
+    def test_with_BPA_BPS(BPA_BPS_factory):
+        # Pure BPS homopolymer
+        bps_only = BPA_BPS_factory(
+            chain_len=15,
+            n_chains=10,
+            bps_fraction=1.0
+        )
+        
+        # Custom BPA/BPS ratio
+        custom_ratio = BPA_BPS_factory(
+            chain_len_min=5,
+            chain_len_max=15,
+            n_chains=20,
+            bps_fraction=0.7  # 70% BPS, 30% BPA
+        )
+'''
+
 @pytest.fixture
 def polyethane_smiles() -> dict[str, str]:
     """Common SMILES definitions for polyethane systems."""
@@ -332,183 +374,3 @@ def BPA_BPS_smiles() -> dict[str, str]:
         'bisphenol_A': '*-[O:1]c1ccc(cc1)C(-C)(-C)c1cc[c:2](cc1)-*',
         'tail': '*-[O:1]c1ccc(cc1)S(=O)(=O)c1ccc(cc1)[O:2]-[H]',
     }
-
-
-@pytest.fixture
-def polyethane_factory(polyethane_smiles):
-    """
-    Factory for creating polyethane systems with configurable parameters.
-    
-    Returns a function that builds polyethane systems with specified:
-    - Chain length (number of repeat units)
-    - Number of chains
-    - Other build parameters
-    
-    Examples
-    --------
-    >>> def test_something(polyethane_factory):
-    ...     # Single 2-mer chain
-    ...     system1 = polyethane_factory(chain_len=2, n_chains=1)
-    ...     
-    ...     # Multiple chains with varying lengths
-    ...     system2 = polyethane_factory(
-    ...         chain_len_min=5,
-    ...         chain_len_max=10,
-    ...         n_chains=20
-    ...     )
-    """
-    def _make_polyethane(
-        chain_len: Optional[int] = None,
-        chain_len_min: Optional[int] = None,
-        chain_len_max: Optional[int] = None,
-        n_chains: int = 1,
-        random_seed: Optional[int] = 42,
-        **kwargs
-    ) -> Primitive:
-        # Handle single chain_len or min/max range
-        if chain_len is not None:
-            chain_len_min = chain_len_max = chain_len
-        elif chain_len_min is None or chain_len_max is None:
-            raise ValueError("Must provide either chain_len or both chain_len_min and chain_len_max")
-        
-        return build_polymer_system(
-            polyethane_smiles,
-            mid_distrib={'ethane': 1.0},
-            n_chains=n_chains,
-            chain_len_min=chain_len_min,
-            chain_len_max=chain_len_max,
-            random_seed=random_seed,
-            show_progress=False,
-            **kwargs
-        )
-    return _make_polyethane
-
-
-@pytest.fixture
-def BPA_BPS_factory(BPA_BPS_smiles):
-    """
-    Factory for creating BPA/BPS copolymer systems with configurable parameters.
-    
-    Returns a function that builds BPA/BPS systems with specified:
-    - Chain length (number of repeat units)
-    - Number of chains
-    - BPA/BPS ratio
-    - Other build parameters
-    
-    Examples
-    --------
-    >>> def test_something(BPA_BPS_factory):
-    ...     # 5 chains, 40% BPS / 60% BPA
-    ...     system1 = BPA_BPS_factory(
-    ...         chain_len_min=5,
-    ...         chain_len_max=10,
-    ...         n_chains=5,
-    ...         bps_fraction=0.4
-    ...     )
-    ...     
-    ...     # Pure BPS homopolymer
-    ...     system2 = BPA_BPS_factory(
-    ...         chain_len=20,
-    ...         n_chains=10,
-    ...         bps_fraction=1.0
-    ...     )
-    """
-    def _make_BPA_BPS(
-        chain_len: Optional[int] = None,
-        chain_len_min: Optional[int] = None,
-        chain_len_max: Optional[int] = None,
-        n_chains: int = 5,
-        bps_fraction: float = 0.4,
-        random_seed: Optional[int] = 42,
-        **kwargs
-    ) -> Primitive:
-        # Handle single chain_len or min/max range
-        if chain_len is not None:
-            chain_len_min = chain_len_max = chain_len
-        elif chain_len_min is None or chain_len_max is None:
-            raise ValueError("Must provide either chain_len or both chain_len_min and chain_len_max")
-        
-        # Calculate BPA/BPS distribution
-        mid_distrib = {
-            'bisphenol_S': bps_fraction,
-            'bisphenol_A': 1.0 - bps_fraction
-        }
-        
-        return build_polymer_system(
-            BPA_BPS_smiles,
-            mid_distrib,
-            n_chains=n_chains,
-            chain_len_min=chain_len_min,
-            chain_len_max=chain_len_max,
-            random_seed=random_seed,
-            show_progress=False,
-            **kwargs
-        )
-    return _make_BPA_BPS
-
-
-@pytest.fixture
-def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
-    """
-    Fixture providing a default BPA/BPS copolymer system Primitive.
-    Primitive is intended to be SAAMR-compliant.
-    [Universe -> Molecule -> Repeat-Units -> Atoms]
-    
-    Default configuration: 5 chains, 5-10 repeat units per chain, 40% BPS / 60% BPA
-    """
-    return BPA_BPS_factory(
-        chain_len_min=5,
-        chain_len_max=10,
-        n_chains=5,
-        bps_fraction=0.4
-    )
-
-@pytest.fixture
-def single_polyethane_2mer(polyethane_factory) -> Primitive:
-    """
-    Fixture providing a Primitive containing a single molecule of
-    polyethane composed of 2 repeat units of ethane.
-    Primitive is intended to be SAAMR-compliant.
-    [Universe -> Molecule -> Repeat-Units -> Atoms]
-    
-    * should have:
-    - 1 chain
-    - 2 repeat units
-    - 8 atoms
-    - 6 intra-residue bonds
-    - 1 inter-residue bond
-    """
-    return polyethane_factory(chain_len=2, n_chains=1)
-
-
-@pytest.fixture
-def single_polyethane_3mer(polyethane_factory) -> Primitive:
-    """
-    Fixture providing a Primitive containing a single molecule of
-    polyethane composed of 3 repeat units of ethane.
-    Primitive is intended to be SAAMR-compliant.
-    [Universe -> Molecule -> Repeat-Units -> Atoms]
-    
-    * should have:
-    - 1 chain
-    - 3 repeat units
-    - 14 atoms
-    - 11 intra-residue bonds
-    - 2 inter-residue bonds
-    """
-    return polyethane_factory(chain_len=3, n_chains=1)
-
-
-# Additional convenience fixtures using the factory
-@pytest.fixture
-def multi_polyethane_system(polyethane_factory) -> Primitive:
-    """
-    Fixture providing a multi-chain polyethane system with varying chain lengths.
-    Useful for testing system-level operations.
-    
-    * should have:
-    - 10 chains
-    - 5-10 repeat units per chain
-    - Variable total atoms/bonds depending on random chain lengths
-    """
-    return polyethane_factory(chain_len_min=5, chain_len_max=10, n_chains=10)
