@@ -120,9 +120,9 @@ def primitive_to_mdanalysis(univprim : Primitive,
     Examples
     --------
     >>> universe = primitive_to_mdanalysis(my_univprim)
-    >>> print(f"Created universe with {universe.atoms.n_atoms} atoms")
-    >>> print(f"Number of residues: {universe.residues.n_residues}")
-    >>> print(f"Number of segments: {universe.segments.n_segments}")
+    >>> LOGGER.info(f"Created universe with {universe.atoms.n_atoms} atoms")
+    >>> LOGGER.info(f"Number of residues: {universe.residues.n_residues}")
+    >>> LOGGER.info(f"Number of segments: {universe.segments.n_segments}")
     """
     
     assert _is_AA_export_compliant(univprim), "[Under Construction] Primitive must be ordered according to: universe -> chains -> residues -> atoms"
@@ -238,7 +238,7 @@ def primitive_to_mdanalysis(univprim : Primitive,
     # Now process inter-residue bonds stored at the chain level
     # We need to map residue handles to their global residue index
 
-    print(f"Processing inter-residue bonds...")
+    LOGGER.info(f"Processing inter-residue bonds...")
     inter_residue_bond_count = 0
 
     for chain_idx, chain in enumerate(univprim.children):
@@ -262,10 +262,10 @@ def primitive_to_mdanalysis(univprim : Primitive,
                 # We need to look up residue.external_connectors to find the ATOM handle
                 
                 if conn_ref1.connector_handle not in residue1.external_connectors:
-                    print(f"  Connector {conn_ref1.connector_handle} not in residue1.external_connectors")
+                    LOGGER.warning(f"  Connector {conn_ref1.connector_handle} not in residue1.external_connectors")
                     continue
                 if conn_ref2.connector_handle not in residue2.external_connectors:
-                    print(f"  Connector {conn_ref2.connector_handle} not in residue2.external_connectors")
+                    LOGGER.warning(f"  Connector {conn_ref2.connector_handle} not in residue2.external_connectors")
                     continue
                 
                 # Get the atom references
@@ -284,13 +284,13 @@ def primitive_to_mdanalysis(univprim : Primitive,
                 if atom1_handle in residue_to_atom_global_idx[global_res1_idx]:
                     global_atom1_idx = residue_to_atom_global_idx[global_res1_idx][atom1_handle]
                 else:
-                    print(f"  Atom handle {atom1_handle} not found in residue {global_res1_idx}")
+                    LOGGER.warning(f"  Atom handle {atom1_handle} not found in residue {global_res1_idx}")
                     continue
                     
                 if atom2_handle in residue_to_atom_global_idx[global_res2_idx]:
                     global_atom2_idx = residue_to_atom_global_idx[global_res2_idx][atom2_handle]
                 else:
-                    print(f"  Atom handle {atom2_handle} not found in residue {global_res2_idx}")
+                    LOGGER.warning(f"  Atom handle {atom2_handle} not found in residue {global_res2_idx}")
                     continue
                 
                 bond_pair = tuple(sorted([global_atom1_idx, global_atom2_idx]))
@@ -308,9 +308,9 @@ def primitive_to_mdanalysis(univprim : Primitive,
                             bond_order = BOND_ORDER[connector.bondtype]
                     bond_orders.append(bond_order)
 
-    print(f"Added {inter_residue_bond_count} inter-residue bonds")
-    print(f"Total bonds: {len(bonds)}")
-    print(f"Bond orders collected: {len(bond_orders)}")
+    LOGGER.info(f"Added {inter_residue_bond_count} inter-residue bonds")
+    LOGGER.info(f"Total bonds: {len(bonds)}")
+    LOGGER.info(f"Bond orders collected: {len(bond_orders)}")
 
     # ----------------------------
     # Convert to numpy arrays
@@ -324,11 +324,11 @@ def primitive_to_mdanalysis(univprim : Primitive,
     num_residues = len(residue_names)
     num_segments = len(univprim.children)
 
-    print(f"Atoms: {num_atoms}, Residues: {num_residues}, Segments: {num_segments}")
-    print(f"Unique atom_resindex: {np.unique(atom_resindex)}")
-    print(f"Unique atom_segindex: {np.unique(atom_segindex)}")
-    print(f"Total bonds collected: {len(bonds)}")
-    print(f"Total bond orders collected: {len(bond_orders)}")
+    LOGGER.info(f"Atoms: {num_atoms}, Residues: {num_residues}, Segments: {num_segments}")
+    LOGGER.info(f"Unique atom_resindex: {np.unique(atom_resindex)}")
+    LOGGER.info(f"Unique atom_segindex: {np.unique(atom_segindex)}")
+    LOGGER.info(f"Total bonds collected: {len(bonds)}")
+    LOGGER.info(f"Total bond orders collected: {len(bond_orders)}")
 
     # ----------------------------
     # Create MDAnalysis Universe
@@ -355,24 +355,24 @@ def primitive_to_mdanalysis(univprim : Primitive,
     universe.add_TopologyAttr("segid", segids)
 
     if bonds:
-        print(f"Adding {len(bonds)} bonds to universe")
+        LOGGER.info(f"Adding {len(bonds)} bonds to universe")
         
         # Add bond orders if available - must be passed during bonds creation
         if bond_orders and len(bond_orders) == len(bonds):
             # MDAnalysis Bonds class accepts order= parameter at creation time
             bond_attr = Bonds(np.asarray(bonds, dtype=np.int32), order=bond_orders)
             universe.add_TopologyAttr(bond_attr)
-            print(f"Added {len(bonds)} bonds with {len(bond_orders)} bond orders")
+            LOGGER.info(f"Added {len(bonds)} bonds with {len(bond_orders)} bond orders")
             
             # Show distribution of bond orders
             from collections import Counter
             order_counts = Counter(bond_orders)
-            print(f"Bond order distribution: {dict(order_counts)}")
+            LOGGER.info(f"Bond order distribution: {dict(order_counts)}")
         else:
             universe.add_TopologyAttr("bonds", np.asarray(bonds, dtype=np.int32))
-            print(f"Added {len(bonds)} bonds (no bond orders)")
+            LOGGER.info(f"Added {len(bonds)} bonds (no bond orders)")
     else:
-        print("No bonds to add")
+        LOGGER.info("No bonds to add")
 
     universe.atoms.positions = atom_positions
 
