@@ -532,3 +532,19 @@ def multi_polyethane_system(polyethane_factory) -> Primitive:
     - Variable total atoms/bonds depending on random chain lengths
     """
     return polyethane_factory(chain_len_min=5, chain_len_max=10, n_chains=10)
+
+@pytest.fixture
+def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
+    """
+    Fixture providing a default BPA/BPS copolymer system Primitive.
+    Primitive is intended to be SAAMR-compliant.
+    [Universe -> Molecule -> Repeat-Units -> Atoms]
+    
+    Default configuration: 5 chains, 5-10 repeat units per chain, 40% BPS / 60% BPA
+    """
+    return BPA_BPS_factory(
+        chain_len_min=5,
+        chain_len_max=10,
+        n_chains=5,
+        bps_fraction=0.4
+    )
