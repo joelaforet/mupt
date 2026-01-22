@@ -17,7 +17,7 @@ import numpy as np
 from typing import Optional
 
 from ...mupr.primitives import Primitive
-from ...mutils.allatomutils import _is_AA_export_compliant
+from ...mutils.SAAMR import _is_SAAMR_compliant
 from ...chemistry.core import BOND_ORDER
 
 # DEV:JRL -> Debating whether to keep resname_map optional.
