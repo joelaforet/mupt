@@ -314,6 +314,11 @@ def build_polymer_system(
 
 
 '''
+NOTE: This concept is confusing! At a high level, the Factory returns
+a function that will have custom arguments passed into it. Each time
+we call the Factory function, it instantiates a new call to build_polymer_system()
+with the parameters we provide when we invoke the Factory.
+
 Factory Fixture Usage Examples
 -------------------------------
 The factory fixtures (polyethane_factory, BPA_BPS_factory) allow creating
@@ -352,7 +357,7 @@ systems with custom parameters in your tests:
             chain_len_max=15,
             n_chains=20,
             bps_fraction=0.7  # 70% BPS, 30% BPA
-        )
+        )        
 '''
 
 @pytest.fixture
