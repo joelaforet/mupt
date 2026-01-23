@@ -400,6 +400,15 @@ def BPA_BPS_resname_map():
         'tail': "TAL"
     }
 
+
+@pytest.fixture
+def helium_resname_map():
+    """Residue name mapping for Helium SAAMR system."""
+    return {
+        'He_unit': 'HEL'
+    }
+
+
 @pytest.fixture
 def polyethane_factory(polyethane_smiles):# -> Callable[..., Primitive]:
     """
@@ -573,3 +582,38 @@ def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
         n_chains=5,
         bps_fraction=0.4
     )
+
+@pytest.fixture
+def single_helium_atom_saamr() -> Primitive:
+    """
+    Fixture providing the simplest possible SAAMR-compliant system: a single Helium atom.
+    
+    This serves as a base case for testing with minimal complexity.
+    Hierarchy: [Universe -> Molecule -> Repeat-Unit -> Atom]
+    
+    * should have:
+    - 1 molecule
+    - 1 repeat unit
+    - 1 atom (He) at position [0, 0, 0]
+    """
+    from ..geometry.shapes import Sphere
+    from periodictable import elements
+    
+    # Create the atom-level primitive (Helium)
+    atom_prim = Primitive(label='He')
+    atom_prim.element = elements.He  # Set element to make it an atom
+    atom_prim.shape = Sphere(0.49)  # 0.49 Angstrom radius at origin
+    
+    # Create the repeat unit and attach the atom
+    repeat_unit_prim = Primitive(label='He_unit')
+    repeat_unit_prim.attach_child(atom_prim)
+    
+    # Create the molecule and attach the repeat unit
+    molecule_prim = Primitive(label='He_molecule')
+    molecule_prim.attach_child(repeat_unit_prim)
+    
+    # Create the universe and attach the molecule
+    universe_prim = Primitive(label='universe')
+    universe_prim.attach_child(molecule_prim)
+    
+    return universe_prim
