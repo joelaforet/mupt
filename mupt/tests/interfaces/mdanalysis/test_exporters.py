@@ -4,6 +4,8 @@ Tests to ensure export from MuPT to MDAnalysis preserves molecular identity and 
 
 # Shortcut to run tests for this file:
 # python -m pytest mupt/tests/interfaces/mdanalysis/test_exporters.py -v
+# With Coverage:
+# python -m pytest mupt/tests/interfaces/mdanalysis/test_exporters.py --cov=mupt.interfaces.mdanalysis --cov-report=term -v
 
 __author__ = 'Joseph R. Laforet Jr.'
 __email__ = 'jola3134@colorado.edu'
