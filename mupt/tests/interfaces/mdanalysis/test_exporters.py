@@ -149,3 +149,120 @@ def test_bond_connectivity_preservation(fixture_name, resname_fixture, request):
 # ============================================================================
 # NEGATIVE TEST CASES: Verify proper error handling for invalid inputs
 # ============================================================================
+
+@pytest.mark.parametrize(
+    "primitive_builder,resname_map,expected_exception,test_id",
+    [
+        # Non-SAAMR compliant: Universe -> Atom directly (depth=1, should be 3)
+        (
+            lambda: (
+                universe := Primitive(label='universe'),
+                atom := Primitive(label='He', element=elements.He),
+                universe.attach_child(atom),
+                universe
+            )[-1],
+            {"He": "HEL"},
+            AssertionError,
+            "non_saamr_shallow_depth"
+        ),
+        
+        # Non-SAAMR compliant: Leaf is not an atom (missing element attribute)
+        (
+            lambda: (
+                universe := Primitive(label='universe'),
+                molecule := Primitive(label='mol'),
+                repeat_unit := Primitive(label='unit'),
+                non_atom := Primitive(label='not_atom'),  # No element → not an atom
+                universe.attach_child(molecule),
+                molecule.attach_child(repeat_unit),
+                repeat_unit.attach_child(non_atom),
+                universe
+            )[-1],
+            {"unit": "UNT"},
+            AssertionError,
+            "non_saamr_non_atom_leaf"
+        ),
+        
+        # Invalid resname_map: residue name too short (2 chars instead of 3)
+        (
+            lambda: (
+                universe := Primitive(label='universe'),
+                molecule := Primitive(label='mol'),
+                repeat_unit := Primitive(label='unit'),
+                atom := Primitive(label='He', element=elements.He),
+                universe.attach_child(molecule),
+                molecule.attach_child(repeat_unit),
+                repeat_unit.attach_child(atom),
+                universe
+            )[-1],
+            {"unit": "HE"},  # Only 2 characters
+            ValueError,
+            "resname_too_short"
+        ),
+        
+        # Invalid resname_map: residue name too long (4 chars instead of 3)
+        (
+            lambda: (
+                universe := Primitive(label='universe'),
+                molecule := Primitive(label='mol'),
+                repeat_unit := Primitive(label='unit'),
+                atom := Primitive(label='He', element=elements.He),
+                universe.attach_child(molecule),
+                molecule.attach_child(repeat_unit),
+                repeat_unit.attach_child(atom),
+                universe
+            )[-1],
+            {"unit": "HELL"},  # 4 characters
+            ValueError,
+            "resname_too_long"
+        ),
+        
+        # Invalid resname_map: missing required entry (no mapping for 'unit')
+        (
+            lambda: (
+                universe := Primitive(label='universe'),
+                molecule := Primitive(label='mol'),
+                repeat_unit := Primitive(label='unit'),
+                atom := Primitive(label='He', element=elements.He),
+                universe.attach_child(molecule),
+                molecule.attach_child(repeat_unit),
+                repeat_unit.attach_child(atom),
+                universe
+            )[-1],
+            {},  # Empty map, label 'unit' is 4 chars → ValueError
+            ValueError,
+            "resname_missing_entry"
+        ),
+    ],
+    ids=["non_saamr_shallow_depth", "non_saamr_non_atom_leaf", "resname_too_short", "resname_too_long", "resname_missing_entry"]
+)
+def test_primitive_to_mdanalysis_error_handling(
+    primitive_builder, resname_map, expected_exception, test_id
+):
+    """
+    Parametrized negative test cases verifying that primitive_to_mdanalysis
+    raises appropriate exceptions for invalid inputs.
+    
+    This test follows the pattern from test_connection.py where we explicitly
+    test both passing and failing cases. These negative tests ensure that:
+    1. Non-SAAMR compliant Primitives are rejected with AssertionError
+    2. Invalid resname_map entries raise ValueError
+    3. The function fails loudly rather than silently producing bad data
+    
+    Parameters
+    ----------
+    primitive_builder : callable
+        Function that constructs the test Primitive (built inline to avoid fixture complexity)
+    resname_map : dict
+        Residue name mapping to test (may be intentionally invalid)
+    expected_exception : Exception class
+        The exception type we expect to be raised
+    test_id : str
+        Human-readable test case identifier for debugging
+    """
+    # Arrange: Build the test primitive
+    univprim = primitive_builder()
+    
+    # Act & Assert: Verify the expected exception is raised
+    with pytest.raises(expected_exception):
+        primitive_to_mdanalysis(univprim, resname_map=resname_map)
