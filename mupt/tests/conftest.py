@@ -400,15 +400,6 @@ def BPA_BPS_resname_map():
         'tail': "TAL"
     }
 
-
-@pytest.fixture
-def helium_resname_map():
-    """Residue name mapping for Helium SAAMR system."""
-    return {
-        'He_unit': 'HEL'
-    }
-
-
 @pytest.fixture
 def polyethane_factory(polyethane_smiles):# -> Callable[..., Primitive]:
     """
@@ -584,6 +575,13 @@ def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
     )
 
 @pytest.fixture
+def helium_resname_map():
+    """Residue name mapping for Helium SAAMR system."""
+    return {
+        'He_unit': 'HEL'
+    }
+
+@pytest.fixture
 def single_helium_atom_saamr() -> Primitive:
     """
     Fixture providing the simplest possible SAAMR-compliant system: a single Helium atom.
@@ -617,3 +615,4 @@ def single_helium_atom_saamr() -> Primitive:
     universe_prim.attach_child(molecule_prim)
     
     return universe_prim
+
