@@ -12,6 +12,8 @@ __email__ = 'jola3134@colorado.edu'
 
 import pytest
 from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
+from mupt.mupr.primitives import Primitive
+from periodictable import elements
 
 
 def count_bonds_in_primitive(univprim):
@@ -143,3 +145,7 @@ def test_bond_connectivity_preservation(fixture_name, resname_fixture, request):
         f"Bond count mismatch: Primitive has {intra_residue_bonds} intra-residue + " \
         f"{inter_residue_bonds} inter-residue = {expected_total_bonds} total bonds, " \
         f"but MDAnalysis Universe has {actual_bond_count} bonds"
+
+# ============================================================================
+# NEGATIVE TEST CASES: Verify proper error handling for invalid inputs
+# ============================================================================
