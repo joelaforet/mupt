@@ -2,6 +2,9 @@
 Tests to ensure export from MuPT to MDAnalysis preserves molecular identity and connectivity.
 '''
 
+# Shortcut to run tests for this file:
+# python -m pytest mupt/tests/interfaces/mdanalysis/test_exporters.py -v
+
 __author__ = 'Joseph R. Laforet Jr.'
 __email__ = 'jola3134@colorado.edu'
 
@@ -17,7 +20,7 @@ from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
         ("BPA_BPS_copolymer", "BPA_BPS_resname_map"),
         ("single_helium_atom_saamr", "helium_resname_map"),
     ],
-    ids=["2mer", "3mer", "multi_chain", "BPA_BPS"]
+    ids=["2mer", "3mer", "multi_chain", "BPA_BPS", "single_helium_atom"]
 )
 def test_atom_count_preservation(fixture_name, resname_fixture, request):
     """
