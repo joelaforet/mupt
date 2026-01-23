@@ -369,6 +369,16 @@ def polyethane_smiles() -> dict[str, str]:
         'tail': '*-[CH2:1]-[H:2]'
     }
 
+# resname_maps are currently used to assign PDB compliant 3-char codes
+# to repeat units
+@pytest.fixture
+def polyethane_resname_map():
+    """Residue name mapping for polyethane systems."""
+    return {
+        'head': "HEA",
+        'ethane': "EAN",
+        'tail': "TYL"
+    }
 
 @pytest.fixture
 def BPA_BPS_smiles() -> dict[str, str]:
@@ -378,6 +388,16 @@ def BPA_BPS_smiles() -> dict[str, str]:
         'bisphenol_S': '*-[O:1]c1ccc(cc1)S(=O)(=O)c1cc[c:2](cc1)-*',
         'bisphenol_A': '*-[O:1]c1ccc(cc1)C(-C)(-C)c1cc[c:2](cc1)-*',
         'tail': '*-[O:1]c1ccc(cc1)S(=O)(=O)c1ccc(cc1)[O:2]-[H]',
+    }
+
+@pytest.fixture
+def BPA_BPS_resname_map():
+    """Residue name mapping for BPA/BPS copolymer systems."""
+    return {
+        'head': "HED",
+        'bisphenol_S': "BPS",
+        'bisphenol_A': "BPA",
+        'tail': "TAL"
     }
 
 @pytest.fixture
