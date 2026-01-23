@@ -15,6 +15,7 @@ from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
         ("single_polyethane_3mer", "polyethane_resname_map"),
         ("multi_polyethane_system", "polyethane_resname_map"),
         ("BPA_BPS_copolymer", "BPA_BPS_resname_map"),
+        ("single_helium_atom_saamr", "helium_resname_map"),
     ],
     ids=["2mer", "3mer", "multi_chain", "BPA_BPS"]
 )
