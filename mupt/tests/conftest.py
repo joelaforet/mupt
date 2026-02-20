@@ -8,7 +8,7 @@ __email__ = 'jola3134@colorado.edu'
 import pytest
 
 import logging
-from typing import Mapping, Iterable, Optional
+from typing import Callable, Mapping, Iterable, Optional
 
 import numpy as np
 import networkx as nx
@@ -372,7 +372,7 @@ def polyethylene_smiles() -> dict[str, str]:
 # resname_maps are currently used to assign PDB compliant 3-char codes
 # to repeat units
 @pytest.fixture
-def polyethylene_resname_map():
+def polyethylene_resname_map() -> dict[str, str]:
     """Residue name mapping for polyethylene systems."""
     return {
         'head': "HEA",
@@ -382,7 +382,7 @@ def polyethylene_resname_map():
 
 @pytest.fixture
 def polyethersulfone_smiles() -> dict[str, str]:
-    """SMILES definitions for BPA/BPS copolymer"""
+    """SMILES definitions for BPA/BPS copolymer, aka polyethersulfone (PES)"""
     return {
         'head': '[H]-[O:1]c1ccc(cc1)S(=O)(=O)c1cc[c:2](cc1)-*',
         'bisphenol_S': '*-[O:1]c1ccc(cc1)S(=O)(=O)c1cc[c:2](cc1)-*',
@@ -391,7 +391,7 @@ def polyethersulfone_smiles() -> dict[str, str]:
     }
 
 @pytest.fixture
-def BPA_BPS_resname_map():
+def BPA_BPS_resname_map() -> dict[str, str]:
     """Residue name mapping for BPA/BPS copolymer systems."""
     return {
         'head': "HED",
@@ -401,7 +401,7 @@ def BPA_BPS_resname_map():
     }
 
 @pytest.fixture
-def polyethylene_factory(polyethylene_smiles):# -> Callable[..., Primitive]:
+def polyethylene_factory(polyethylene_smiles) -> Callable[..., Primitive]:
     """
     Factory for creating polyethylene systems with configurable parameters.
     
@@ -450,7 +450,7 @@ def polyethylene_factory(polyethylene_smiles):# -> Callable[..., Primitive]:
     return _make_polyethylene
 
 @pytest.fixture
-def BPA_BPS_factory(BPA_BPS_smiles):
+def BPA_BPS_factory(BPA_BPS_smiles)-> Callable[..., Primitive]:
     """
     Factory for creating BPA/BPS copolymer systems with configurable parameters.
     
@@ -512,7 +512,7 @@ def BPA_BPS_factory(BPA_BPS_smiles):
     return _make_BPA_BPS
     
 @pytest.fixture
-def single_polyethylene_2mer(polyethylene_factory) -> Primitive:
+def single_polyethylene_2mer(polyethylene_factory: Callable[..., Primitive]) -> Primitive:
     """
     Fixture providing a Primitive containing a single molecule of
     polyethylene composed of 2 repeat units of ethane.
@@ -529,7 +529,7 @@ def single_polyethylene_2mer(polyethylene_factory) -> Primitive:
     return polyethylene_factory(chain_len=2, n_chains=1)
 
 @pytest.fixture
-def single_polyethylene_3mer(polyethylene_factory) -> Primitive:
+def single_polyethylene_3mer(polyethylene_factory: Callable[..., Primitive]) -> Primitive:
     """
     Fixture providing a Primitive containing a single molecule of
     polyethylene composed of 3 repeat units of ethane.
@@ -546,7 +546,7 @@ def single_polyethylene_3mer(polyethylene_factory) -> Primitive:
     return polyethylene_factory(chain_len=3, n_chains=1)
 
 @pytest.fixture
-def multi_polyethylene_system(polyethylene_factory) -> Primitive:
+def multi_polyethylene_system(polyethylene_factory: Callable[..., Primitive]) -> Primitive:
     """
     Fixture providing a multi-chain polyethylene system with varying chain lengths.
     Useful for testing system-level operations.
@@ -559,7 +559,7 @@ def multi_polyethylene_system(polyethylene_factory) -> Primitive:
     return polyethylene_factory(chain_len_min=5, chain_len_max=10, n_chains=10)
 
 @pytest.fixture
-def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
+def BPA_BPS_copolymer(BPA_BPS_factory: Callable[..., Primitive]) -> Primitive:
     """
     Fixture providing a default BPA/BPS copolymer system Primitive.
     Primitive is intended to be SAAMR-compliant.
@@ -575,7 +575,7 @@ def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
     )
 
 @pytest.fixture
-def helium_resname_map():
+def helium_resname_map() -> dict[str, str]:
     """Residue name mapping for Helium SAAMR system."""
     return {
         'He_unit': 'HEL'
