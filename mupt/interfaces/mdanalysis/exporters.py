@@ -123,7 +123,6 @@ def primitive_to_mdanalysis(univprim : Primitive,
     >>> LOGGER.info(f"Number of segments: {universe.segments.n_segments}")
     """
     
-    
     if not _is_SAAMR_compliant(univprim):
         raise ValueError("Primitive is not SAAMR-compliant. Expected a hierarchy ordered as "  
         "universe -> chains -> residues -> atoms. Ensure that the input "  
