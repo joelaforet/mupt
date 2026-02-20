@@ -321,22 +321,22 @@ with the parameters we provide when we invoke the Factory.
 
 Factory Fixture Usage Examples
 -------------------------------
-The factory fixtures (polyethane_factory, BPA_BPS_factory) allow creating
+The factory fixtures (polyethylene_factory, BPA_BPS_factory) allow creating
 systems with custom parameters in your tests:
 
-    def test_with_custom_system(polyethane_factory):
+    def test_with_custom_system(polyethylene_factory):
         # Single chain with specific length
-        small_system = polyethane_factory(chain_len=5, n_chains=1)
+        small_system = polyethylene_factory(chain_len=5, n_chains=1)
         
         # Multiple chains with length variation
-        large_system = polyethane_factory(
+        large_system = polyethylene_factory(
             chain_len_min=10,
             chain_len_max=20,
             n_chains=50
         )
         
         # Custom parameters (bond_length, angle_max_rad, etc.)
-        custom_system = polyethane_factory(
+        custom_system = polyethylene_factory(
             chain_len=10,
             n_chains=5,
             bond_length=2.0,
@@ -361,8 +361,8 @@ systems with custom parameters in your tests:
 '''
 
 @pytest.fixture
-def polyethane_smiles() -> dict[str, str]:
-    """SMILES definitions for polyethane"""
+def polyethylene_smiles() -> dict[str, str]:
+    """SMILES definitions for polyethylene"""
     return {
         'head': '[H:1]-[CH2:2]-*',
         'ethane': '*-[CH2:1][CH2:2]-*',
@@ -372,8 +372,8 @@ def polyethane_smiles() -> dict[str, str]:
 # resname_maps are currently used to assign PDB compliant 3-char codes
 # to repeat units
 @pytest.fixture
-def polyethane_resname_map():
-    """Residue name mapping for polyethane systems."""
+def polyethylene_resname_map():
+    """Residue name mapping for polyethylene systems."""
     return {
         'head': "HEA",
         'ethane': "EAN",
@@ -381,7 +381,7 @@ def polyethane_resname_map():
     }
 
 @pytest.fixture
-def BPA_BPS_smiles() -> dict[str, str]:
+def polyethersulfone_smiles() -> dict[str, str]:
     """SMILES definitions for BPA/BPS copolymer"""
     return {
         'head': '[H]-[O:1]c1ccc(cc1)S(=O)(=O)c1cc[c:2](cc1)-*',
@@ -401,29 +401,29 @@ def BPA_BPS_resname_map():
     }
 
 @pytest.fixture
-def polyethane_factory(polyethane_smiles):# -> Callable[..., Primitive]:
+def polyethylene_factory(polyethylene_smiles):# -> Callable[..., Primitive]:
     """
-    Factory for creating polyethane systems with configurable parameters.
+    Factory for creating polyethylene systems with configurable parameters.
     
-    Returns a function that builds polyethane systems with specified:
+    Returns a function that builds polyethylene systems with specified:
     - Chain length (number of repeat units)
     - Number of chains
     - Other build parameters
     
     Examples
     --------
-    >>> def test_something(polyethane_factory):
+    >>> def test_something(polyethylene_factory):
     ...     # Single 2-mer chain
-    ...     system1 = polyethane_factory(chain_len=2, n_chains=1)
+    ...     system1 = polyethylene_factory(chain_len=2, n_chains=1)
     ...     
     ...     # Multiple chains with varying lengths
-    ...     system2 = polyethane_factory(
+    ...     system2 = polyethylene_factory(
     ...         chain_len_min=5,
     ...         chain_len_max=10,
     ...         n_chains=20
     ...     )
     """
-    def _make_polyethane(
+    def _make_polyethylene(
         chain_len: Optional[int] = None,
         chain_len_min: Optional[int] = None,
         chain_len_max: Optional[int] = None,
@@ -438,7 +438,7 @@ def polyethane_factory(polyethane_smiles):# -> Callable[..., Primitive]:
             raise ValueError("Must provide either chain_len or both chain_len_min and chain_len_max")
         
         return build_polymer_system(
-            polyethane_smiles,
+            polyethylene_smiles,
             mid_distrib={'ethane': 1.0},
             n_chains=n_chains,
             chain_len_min=chain_len_min,
@@ -447,7 +447,7 @@ def polyethane_factory(polyethane_smiles):# -> Callable[..., Primitive]:
             show_progress=False,
             **kwargs
         )
-    return _make_polyethane
+    return _make_polyethylene
 
 @pytest.fixture
 def BPA_BPS_factory(BPA_BPS_smiles):
@@ -512,10 +512,10 @@ def BPA_BPS_factory(BPA_BPS_smiles):
     return _make_BPA_BPS
     
 @pytest.fixture
-def single_polyethane_2mer(polyethane_factory) -> Primitive:
+def single_polyethylene_2mer(polyethylene_factory) -> Primitive:
     """
     Fixture providing a Primitive containing a single molecule of
-    polyethane composed of 2 repeat units of ethane.
+    polyethylene composed of 2 repeat units of ethane.
     Primitive is intended to be SAAMR-compliant.
     [Universe -> Molecule -> Repeat-Units -> Atoms]
     
@@ -526,13 +526,13 @@ def single_polyethane_2mer(polyethane_factory) -> Primitive:
     - 6 intra-residue bonds
     - 1 inter-residue bond
     """
-    return polyethane_factory(chain_len=2, n_chains=1)
+    return polyethylene_factory(chain_len=2, n_chains=1)
 
 @pytest.fixture
-def single_polyethane_3mer(polyethane_factory) -> Primitive:
+def single_polyethylene_3mer(polyethylene_factory) -> Primitive:
     """
     Fixture providing a Primitive containing a single molecule of
-    polyethane composed of 3 repeat units of ethane.
+    polyethylene composed of 3 repeat units of ethane.
     Primitive is intended to be SAAMR-compliant.
     [Universe -> Molecule -> Repeat-Units -> Atoms]
     
@@ -543,12 +543,12 @@ def single_polyethane_3mer(polyethane_factory) -> Primitive:
     - 11 intra-residue bonds
     - 2 inter-residue bonds
     """
-    return polyethane_factory(chain_len=3, n_chains=1)
+    return polyethylene_factory(chain_len=3, n_chains=1)
 
 @pytest.fixture
-def multi_polyethane_system(polyethane_factory) -> Primitive:
+def multi_polyethylene_system(polyethylene_factory) -> Primitive:
     """
-    Fixture providing a multi-chain polyethane system with varying chain lengths.
+    Fixture providing a multi-chain polyethylene system with varying chain lengths.
     Useful for testing system-level operations.
     
     * should have:
@@ -556,7 +556,7 @@ def multi_polyethane_system(polyethane_factory) -> Primitive:
     - 5-10 repeat units per chain
     - Variable total atoms/bonds depending on random chain lengths
     """
-    return polyethane_factory(chain_len_min=5, chain_len_max=10, n_chains=10)
+    return polyethylene_factory(chain_len_min=5, chain_len_max=10, n_chains=10)
 
 @pytest.fixture
 def BPA_BPS_copolymer(BPA_BPS_factory) -> Primitive:
