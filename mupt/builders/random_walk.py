@@ -1,7 +1,7 @@
 '''Utilities for generating coordinates of random walks'''
 
 __author__ = 'Timotej Bernat'
-__email__ = 'timotej.bernat@colorado.edu
+__email__ = 'timotej.bernat@colorado.edu'
 
 import logging
 LOGGER = logging.getLogger(__name__)
