@@ -15,6 +15,7 @@ from MDAnalysis.core.topologyattrs import Bonds
 
 import numpy as np
 from typing import Optional
+from collections import Counter
 
 from ...mupr.primitives import Primitive
 from ...mutils.saamr import _is_SAAMR_compliant
@@ -367,7 +368,6 @@ def primitive_to_mdanalysis(univprim : Primitive,
             LOGGER.info(f"Added {len(bonds)} bonds with {len(bond_orders)} bond orders")
             
             # Show distribution of bond orders
-            from collections import Counter
             order_counts = Counter(bond_orders)
             LOGGER.info(f"Bond order distribution: {dict(order_counts)}")
         else:
