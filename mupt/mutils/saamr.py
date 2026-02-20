@@ -10,7 +10,7 @@ def _is_SAAMR_compliant(prim : Primitive) -> bool:
     """
     Check whether a Primitive hierarchy is organized
     as universe -> molecule -> repeat-unit -> atom
-    """   
+    """
     
     return all(
         leaf.is_atom and (leaf.depth == 3)        
