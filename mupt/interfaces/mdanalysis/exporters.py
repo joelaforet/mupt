@@ -26,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 # DEV:JRL -> Debating whether to keep resname_map optional.
-def _pdb_resname(label: str, resname_map: Optional[dict]) -> str:
+def _pdb_resname(label: str, resname_map: dict[str, str]) -> str:
     """
     Map a residue label to a PDB-compliant 3-character residue name.
 
