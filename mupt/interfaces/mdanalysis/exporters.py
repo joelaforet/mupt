@@ -161,7 +161,7 @@ def primitive_to_mdanalysis(univprim : Primitive,
     res_idx = 0
 
     # ----------------------------
-    # Traverse hierarchy explicitly
+    # Traverse hierarchy explicitly DEV: JRL -> Consider implementing a more efficient traversal like DFS in the future
     # ----------------------------
     for chain_idx, chain in enumerate(univprim.children):
 
