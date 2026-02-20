@@ -71,11 +71,10 @@ def _pdb_resname(label: str, resname_map: dict[str, str]) -> str:
         )
     return name.upper()
 
-# DEV: JRL -> Debating whether to keep resname_map optional.
 # DEV: JRL -> I wrote this function with protein-flavored vocabulary in mind.
 # Chains == Molecules, Residues == Repeat-Units, Atoms == Atoms
 def primitive_to_mdanalysis(univprim : Primitive,
-                            resname_map: Optional[dict[str, str]] = None,
+                            resname_map: dict[str, str],
                             ) -> mda.Universe:
     """
     Convert a MuPT Primitive (univprim) to a MDAnalysis Universe.
