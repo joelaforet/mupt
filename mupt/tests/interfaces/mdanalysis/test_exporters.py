@@ -55,9 +55,9 @@ def count_bonds_in_primitive(univprim):
 @pytest.mark.parametrize(
     "fixture_name,resname_fixture",
     [
-        ("single_polyethane_2mer", "polyethane_resname_map"),
-        ("single_polyethane_3mer", "polyethane_resname_map"),
-        ("multi_polyethane_system", "polyethane_resname_map"),
+        ("single_polyethylene_2mer", "polyethylene_resname_map"),
+        ("single_polyethylene_3mer", "polyethylene_resname_map"),
+        ("multi_polyethylene_system", "polyethylene_resname_map"),
         ("BPA_BPS_copolymer", "BPA_BPS_resname_map"),
         ("single_helium_atom_saamr", "helium_resname_map"),
     ],
@@ -93,9 +93,9 @@ def test_atom_count_preservation(fixture_name, resname_fixture, request):
 @pytest.mark.parametrize(
     "fixture_name,resname_fixture",
     [
-        ("single_polyethane_2mer", "polyethane_resname_map"),
-        ("single_polyethane_3mer", "polyethane_resname_map"),
-        ("multi_polyethane_system", "polyethane_resname_map"),
+        ("single_polyethylene_2mer", "polyethylene_resname_map"),
+        ("single_polyethylene_3mer", "polyethylene_resname_map"),
+        ("multi_polyethylene_system", "polyethylene_resname_map"),
         ("BPA_BPS_copolymer", "BPA_BPS_resname_map"),
         ("single_helium_atom_saamr", "helium_resname_map"),
     ],
