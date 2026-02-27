@@ -7,8 +7,8 @@ into MDAnalysis Universe objects, focusing on topology information
 (atoms, residues, segments, and bonds).
 """
 
-__author__ = 'Joseph R. Laforet Jr.'
-__email__ = 'jola3134@colorado.edu'
+__author__ = "Joseph R. Laforet Jr."
+__email__ = "jola3134@colorado.edu"
 
 import MDAnalysis as mda
 from MDAnalysis.core.topologyattrs import Bonds
@@ -18,7 +18,7 @@ from typing import Optional
 from collections import Counter
 
 from ...mupr.primitives import Primitive
-from ...mutils.saamr import _is_SAAMR_compliant
+from ...mupr.properties import _is_SAAMR_compliant
 from ...chemistry.core import BOND_ORDER
 
 import logging
@@ -26,13 +26,14 @@ import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
+
 def _pdb_resname(label: str, resname_map: dict[str, str]) -> str:
     """
     Map a residue label to a PDB-compliant 3-character residue name.
 
-    This helper function is used to ensure residue names are valid for 
-    PDB export and downstream visualization (e.g., in PyMOL). 
-    It optionally applies a user-provided mapping from original labels 
+    This helper function is used to ensure residue names are valid for
+    PDB export and downstream visualization (e.g., in PyMOL).
+    It optionally applies a user-provided mapping from original labels
     to 3-letter codes and enforces uppercase formatting.
 
     Parameters
@@ -40,8 +41,8 @@ def _pdb_resname(label: str, resname_map: dict[str, str]) -> str:
     label : str
         Original residue label from the Primitive object.
     resname_map : dict, optional
-        Optional mapping from residue labels to 3-character PDB residue names. 
-        If the label is in the dictionary, the mapped value is used. 
+        Optional mapping from residue labels to 3-character PDB residue names.
+        If the label is in the dictionary, the mapped value is used.
         Otherwise, the original label is returned.
 
     Returns
@@ -72,26 +73,28 @@ def _pdb_resname(label: str, resname_map: dict[str, str]) -> str:
         )
     return name.upper()
 
+
 # DEV: JRL -> I wrote this function with protein-flavored vocabulary in mind.
 # Chains == Molecules, Residues == Repeat-Units, Atoms == Atoms
-def primitive_to_mdanalysis(univprim : Primitive,
-                            resname_map: dict[str, str],
-                            ) -> mda.Universe:
+def primitive_to_mdanalysis(
+    univprim: Primitive,
+    resname_map: dict[str, str],
+) -> mda.Universe:
     """
     Convert a MuPT Primitive (univprim) to a MDAnalysis Universe.
-    
+
     This function extracts topology information by parsing a Primitive that adheres to
-    the Standard All-Atom Molecular Representation (SAAMR) convention and creates a 
+    the Standard All-Atom Molecular Representation (SAAMR) convention and creates a
     MDAnalysis Universe with atoms, residues, segments, and bonds.
     Note that coordinates are extracted from the centroid of Atoms, or set to [0,0,0]
     if a centroid is not set.
-    
+
     Parameters
     ----------
     univprim : Primitive
         A SAAMR-compliant MuPT Primitive containing the molecular system
         in a tree-like hierarchy (universe -> molecules -> repeat-units -> atoms).
-    resname_map : dict, optional 
+    resname_map : dict, optional
         A mapping from residue labels to PDB residue names (3-letter codes).
         If provided, this mapping will be used to set residue names in the
         MDAnalysis Universe. If not provided, residue labels from univprim
@@ -107,7 +110,7 @@ def primitive_to_mdanalysis(univprim : Primitive,
         - Residues with names and IDs
         - Segments with IDs
         - Bond connectivity
-    
+
     Notes
     -----
     - Atom array indices are 0-based (MDAnalysis internal convention)
@@ -115,7 +118,7 @@ def primitive_to_mdanalysis(univprim : Primitive,
     - Bond indices are 0-based (array indices)
     - Atom names are set to element symbols (atom-type agnostic approach)
     - Coordinates are extracted from the centroid of Atom Primitives, [0,0,0] by default
-    
+
     Examples
     --------
     >>> universe = primitive_to_mdanalysis(my_univprim)
@@ -123,12 +126,14 @@ def primitive_to_mdanalysis(univprim : Primitive,
     >>> LOGGER.info(f"Number of residues: {universe.residues.n_residues}")
     >>> LOGGER.info(f"Number of segments: {universe.segments.n_segments}")
     """
-    
+
     if not _is_SAAMR_compliant(univprim):
-        raise ValueError("Primitive is not SAAMR-compliant. Expected a hierarchy ordered as "  
-        "universe -> chains -> residues -> atoms. Ensure that the input "  
-        "Primitive is constructed or reordered to follow this hierarchy "  
-        "before calling primitive_to_mdanalysis().")
+        raise ValueError(
+            "Primitive is not SAAMR-compliant. Expected a hierarchy ordered as "
+            "universe -> chains -> residues -> atoms. Ensure that the input "
+            "Primitive is constructed or reordered to follow this hierarchy "
+            "before calling primitive_to_mdanalysis()."
+        )
 
     # ----------------------------
     # Containers (allow duplicates)
@@ -165,13 +170,10 @@ def primitive_to_mdanalysis(univprim : Primitive,
     # Traverse hierarchy explicitly DEV: JRL -> Consider implementing a more efficient traversal like DFS in the future
     # ----------------------------
     for chain_idx, chain in enumerate(univprim.children):
-
         resid_counter = 1  # reset per chain
 
         for residue in chain.children:
-            residue_names.append(
-                _pdb_resname(residue.label, resname_map)
-            )
+            residue_names.append(_pdb_resname(residue.label, resname_map))
 
             residue_segindex.append(chain_idx)
             residue_ids.append(resid_counter)
@@ -207,28 +209,49 @@ def primitive_to_mdanalysis(univprim : Primitive,
             # For intra-residue bonds, we need to find the bond order from internal_connections
             if hasattr(residue, "topology") and residue.topology is not None:
                 for atom_handle_1, atom_handle_2 in residue.topology.edges():
-                    if atom_handle_1 in atom_handle_to_global and atom_handle_2 in atom_handle_to_global:
+                    if (
+                        atom_handle_1 in atom_handle_to_global
+                        and atom_handle_2 in atom_handle_to_global
+                    ):
                         global_idx_1 = atom_handle_to_global[atom_handle_1]
                         global_idx_2 = atom_handle_to_global[atom_handle_2]
-                        
+
                         bond_pair = tuple(sorted([global_idx_1, global_idx_2]))
                         if bond_pair not in bonds_set:
                             bonds.append(bond_pair)
                             bonds_set.add(bond_pair)
-                            
+
                             # Get bond order from residue's internal_connections
                             bond_order = 1.0  # Default to single bond
                             if hasattr(residue, "internal_connections"):
-                                for conn_ref1, conn_ref2 in residue.internal_connections:
-                                    if (conn_ref1.primitive_handle == atom_handle_1 and conn_ref2.primitive_handle == atom_handle_2) or \
-                                    (conn_ref1.primitive_handle == atom_handle_2 and conn_ref2.primitive_handle == atom_handle_1):
+                                for (
+                                    conn_ref1,
+                                    conn_ref2,
+                                ) in residue.internal_connections:
+                                    if (
+                                        conn_ref1.primitive_handle == atom_handle_1
+                                        and conn_ref2.primitive_handle == atom_handle_2
+                                    ) or (
+                                        conn_ref1.primitive_handle == atom_handle_2
+                                        and conn_ref2.primitive_handle == atom_handle_1
+                                    ):
                                         # Found the connection, get the connector and its bondtype
                                         atom1 = residue.fetch_child(atom_handle_1)
                                         # Use .connectors which is a UniqueRegistry that can be indexed by handle
-                                        if conn_ref1.connector_handle in atom1.connectors:
-                                            connector = atom1.connectors[conn_ref1.connector_handle]
-                                            if hasattr(connector, 'bondtype') and connector.bondtype in BOND_ORDER:
-                                                bond_order = BOND_ORDER[connector.bondtype]
+                                        if (
+                                            conn_ref1.connector_handle
+                                            in atom1.connectors
+                                        ):
+                                            connector = atom1.connectors[
+                                                conn_ref1.connector_handle
+                                            ]
+                                            if (
+                                                hasattr(connector, "bondtype")
+                                                and connector.bondtype in BOND_ORDER
+                                            ):
+                                                bond_order = BOND_ORDER[
+                                                    connector.bondtype
+                                                ]
                                         break
                             bond_orders.append(bond_order)
 
@@ -247,67 +270,88 @@ def primitive_to_mdanalysis(univprim : Primitive,
     for chain_idx, chain in enumerate(univprim.children):
         # Build mapping from residue handle -> global residue index for this chain
         residue_handle_to_global_res_idx = {}
-        global_res_offset = sum(len(univprim.children[c].children) for c in range(chain_idx))
-        
-        for local_res_idx, (res_handle, residue) in enumerate(chain.children_by_handle.items()):
-            residue_handle_to_global_res_idx[res_handle] = global_res_offset + local_res_idx
-        
+        global_res_offset = sum(
+            len(univprim.children[c].children) for c in range(chain_idx)
+        )
+
+        for local_res_idx, (res_handle, residue) in enumerate(
+            chain.children_by_handle.items()
+        ):
+            residue_handle_to_global_res_idx[res_handle] = (
+                global_res_offset + local_res_idx
+            )
+
         if hasattr(chain, "internal_connections") and chain.internal_connections:
             for conn_ref1, conn_ref2 in chain.internal_connections:
                 residue1_handle = conn_ref1.primitive_handle
                 residue2_handle = conn_ref2.primitive_handle
-                
+
                 # Fetch the residues involved in the inter-residue bond
                 residue1 = chain.fetch_child(residue1_handle)
                 residue2 = chain.fetch_child(residue2_handle)
-                
+
                 # The connector handles in conn_ref1/conn_ref2 are on the RESIDUE level
                 # We need to look up residue.external_connectors to find the ATOM handle
-                
+
                 if conn_ref1.connector_handle not in residue1.external_connectors:
-                    LOGGER.warning(f"  Connector {conn_ref1.connector_handle} not in residue1.external_connectors")
+                    LOGGER.warning(
+                        f"  Connector {conn_ref1.connector_handle} not in residue1.external_connectors"
+                    )
                     continue
                 if conn_ref2.connector_handle not in residue2.external_connectors:
-                    LOGGER.warning(f"  Connector {conn_ref2.connector_handle} not in residue2.external_connectors")
+                    LOGGER.warning(
+                        f"  Connector {conn_ref2.connector_handle} not in residue2.external_connectors"
+                    )
                     continue
-                
+
                 # Get the atom references
                 atom_ref1 = residue1.external_connectors[conn_ref1.connector_handle]
                 atom_ref2 = residue2.external_connectors[conn_ref2.connector_handle]
-                
+
                 # atom_ref1.primitive_handle is the ATOM handle within residue1
                 atom1_handle = atom_ref1.primitive_handle
                 atom2_handle = atom_ref2.primitive_handle
-                
+
                 # Get global residue indices
                 global_res1_idx = residue_handle_to_global_res_idx[residue1_handle]
                 global_res2_idx = residue_handle_to_global_res_idx[residue2_handle]
-                
+
                 # Get global atom indices
                 if atom1_handle in residue_to_atom_global_idx[global_res1_idx]:
-                    global_atom1_idx = residue_to_atom_global_idx[global_res1_idx][atom1_handle]
+                    global_atom1_idx = residue_to_atom_global_idx[global_res1_idx][
+                        atom1_handle
+                    ]
                 else:
-                    LOGGER.warning(f"  Atom handle {atom1_handle} not found in residue {global_res1_idx}")
+                    LOGGER.warning(
+                        f"  Atom handle {atom1_handle} not found in residue {global_res1_idx}"
+                    )
                     continue
-                    
+
                 if atom2_handle in residue_to_atom_global_idx[global_res2_idx]:
-                    global_atom2_idx = residue_to_atom_global_idx[global_res2_idx][atom2_handle]
+                    global_atom2_idx = residue_to_atom_global_idx[global_res2_idx][
+                        atom2_handle
+                    ]
                 else:
-                    LOGGER.warning(f"  Atom handle {atom2_handle} not found in residue {global_res2_idx}")
+                    LOGGER.warning(
+                        f"  Atom handle {atom2_handle} not found in residue {global_res2_idx}"
+                    )
                     continue
-                
+
                 bond_pair = tuple(sorted([global_atom1_idx, global_atom2_idx]))
                 if bond_pair not in bonds_set:
                     bonds.append(bond_pair)
                     bonds_set.add(bond_pair)
                     inter_residue_bond_count += 1
-                    
+
                     # Get bond order from the connector on residue1
                     # Use .connectors which is a UniqueRegistry that can be indexed by handle
                     bond_order = 1.0  # Default to single bond
                     if conn_ref1.connector_handle in residue1.connectors:
                         connector = residue1.connectors[conn_ref1.connector_handle]
-                        if hasattr(connector, 'bondtype') and connector.bondtype in BOND_ORDER:
+                        if (
+                            hasattr(connector, "bondtype")
+                            and connector.bondtype in BOND_ORDER
+                        ):
                             bond_order = BOND_ORDER[connector.bondtype]
                     bond_orders.append(bond_order)
 
@@ -327,7 +371,9 @@ def primitive_to_mdanalysis(univprim : Primitive,
     num_residues = len(residue_names)
     num_segments = len(univprim.children)
 
-    LOGGER.info(f"Atoms: {num_atoms}, Residues: {num_residues}, Segments: {num_segments}")
+    LOGGER.info(
+        f"Atoms: {num_atoms}, Residues: {num_residues}, Segments: {num_segments}"
+    )
     LOGGER.info(f"Unique atom_resindex: {np.unique(atom_resindex)}")
     LOGGER.info(f"Unique atom_segindex: {np.unique(atom_segindex)}")
     LOGGER.info(f"Total bonds collected: {len(bonds)}")
@@ -359,14 +405,14 @@ def primitive_to_mdanalysis(univprim : Primitive,
 
     if bonds:
         LOGGER.info(f"Adding {len(bonds)} bonds to universe")
-        
+
         # Add bond orders if available - must be passed during bonds creation
         if bond_orders and len(bond_orders) == len(bonds):
             # MDAnalysis Bonds class accepts order= parameter at creation time
             bond_attr = Bonds(np.asarray(bonds, dtype=np.int32), order=bond_orders)
             universe.add_TopologyAttr(bond_attr)
             LOGGER.info(f"Added {len(bonds)} bonds with {len(bond_orders)} bond orders")
-            
+
             # Show distribution of bond orders
             order_counts = Counter(bond_orders)
             LOGGER.info(f"Bond order distribution: {dict(order_counts)}")
