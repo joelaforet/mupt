@@ -58,10 +58,10 @@ def count_bonds_in_primitive(univprim):
         ("single_polyethylene_2mer", "polyethylene_resname_map"),
         ("single_polyethylene_3mer", "polyethylene_resname_map"),
         ("multi_polyethylene_system", "polyethylene_resname_map"),
-        ("BPA_BPS_copolymer", "BPA_BPS_resname_map"),
+        ("PES_copolymer", "PES_resname_map"),
         ("single_helium_atom_saamr", "helium_resname_map"),
     ],
-    ids=["2mer", "3mer", "multi_chain", "BPA_BPS", "single_helium_atom"],
+    ids=["2mer", "3mer", "multi_chain", "PES", "single_helium_atom"],
 )
 def test_atom_count_preservation(primitive_fixture, resname_fixture, request):
     """
@@ -95,10 +95,10 @@ def test_atom_count_preservation(primitive_fixture, resname_fixture, request):
         ("single_polyethylene_2mer", "polyethylene_resname_map"),
         ("single_polyethylene_3mer", "polyethylene_resname_map"),
         ("multi_polyethylene_system", "polyethylene_resname_map"),
-        ("BPA_BPS_copolymer", "BPA_BPS_resname_map"),
+        ("PES_copolymer", "PES_resname_map"),
         ("single_helium_atom_saamr", "helium_resname_map"),
     ],
-    ids=["2mer", "3mer", "multi_chain", "BPA_BPS", "single_helium_atom"],
+    ids=["2mer", "3mer", "multi_chain", "PES", "single_helium_atom"],
 )
 def test_bond_connectivity_preservation(primitive_fixture, resname_fixture, request):
     """

@@ -308,7 +308,7 @@ with the parameters we provide when we invoke the Factory.
 
 Factory Fixture Usage Examples
 -------------------------------
-The factory fixtures (polyethylene_factory, BPA_BPS_factory) allow creating
+The factory fixtures (polyethylene_factory, PES_factory) allow creating
 systems with custom parameters in your tests:
 
     def test_with_custom_system(polyethylene_factory):
@@ -330,16 +330,16 @@ systems with custom parameters in your tests:
             angle_max_rad=np.pi/6
         )
     
-    def test_with_BPA_BPS(BPA_BPS_factory):
+    def test_with_PES(PES_factory):
         # Pure BPS homopolymer
-        bps_only = BPA_BPS_factory(
+        bps_only = PES_factory(
             chain_len=15,
             n_chains=10,
             bps_fraction=1.0
         )
         
         # Custom BPA/BPS ratio
-        custom_ratio = BPA_BPS_factory(
+        custom_ratio = PES_factory(
             chain_len_min=5,
             chain_len_max=15,
             n_chains=20,
@@ -378,7 +378,7 @@ def polyethersulfone_smiles() -> dict[str, str]:
 
 
 @pytest.fixture
-def BPA_BPS_resname_map() -> dict[str, str]:
+def PES_resname_map() -> dict[str, str]:
     """Residue name mapping for BPA/BPS copolymer systems."""
     return {"head": "HED", "bisphenol_S": "BPS", "bisphenol_A": "BPA", "tail": "TAL"}
 
@@ -439,7 +439,7 @@ def polyethylene_factory(
 
 
 @pytest.fixture
-def BPA_BPS_factory(polyethersulfone_smiles) -> Callable[..., Primitive]:
+def PES_factory(polyethersulfone_smiles) -> Callable[..., Primitive]:
     """
     Factory for creating BPA/BPS copolymer systems with configurable parameters.
 
@@ -451,9 +451,9 @@ def BPA_BPS_factory(polyethersulfone_smiles) -> Callable[..., Primitive]:
 
     Examples
     --------
-    >>> def test_something(BPA_BPS_factory):
+    >>> def test_something(PES_factory):
     ...     # 5 chains, 40% BPS / 60% BPA
-    ...     system1 = BPA_BPS_factory(
+    ...     system1 = PES_factory(
     ...         chain_len_min=5,
     ...         chain_len_max=10,
     ...         n_chains=5,
@@ -461,14 +461,14 @@ def BPA_BPS_factory(polyethersulfone_smiles) -> Callable[..., Primitive]:
     ...     )
     ...
     ...     # Pure BPS homopolymer
-    ...     system2 = BPA_BPS_factory(
+    ...     system2 = PES_factory(
     ...         chain_len=20,
     ...         n_chains=10,
     ...         bps_fraction=1.0
     ...     )
     """
 
-    def _make_BPA_BPS(
+    def _make_PES(
         chain_len: Optional[int] = None,
         chain_len_min: Optional[int] = None,
         chain_len_max: Optional[int] = None,
@@ -498,7 +498,7 @@ def BPA_BPS_factory(polyethersulfone_smiles) -> Callable[..., Primitive]:
             **kwargs,
         )
 
-    return _make_BPA_BPS
+    return _make_PES
 
 
 @pytest.fixture
@@ -558,7 +558,7 @@ def multi_polyethylene_system(
 
 
 @pytest.fixture
-def BPA_BPS_copolymer(BPA_BPS_factory: Callable[..., Primitive]) -> Primitive:
+def PES_copolymer(PES_factory: Callable[..., Primitive]) -> Primitive:
     """
     Fixture providing a default BPA/BPS copolymer system Primitive.
     Primitive is intended to be SAAMR-compliant.
@@ -566,7 +566,7 @@ def BPA_BPS_copolymer(BPA_BPS_factory: Callable[..., Primitive]) -> Primitive:
 
     Default configuration: 5 chains, 5-10 repeat units per chain, 40% BPS / 60% BPA
     """
-    return BPA_BPS_factory(
+    return PES_factory(
         chain_len_min=5, chain_len_max=10, n_chains=5, bps_fraction=0.4
     )
 
