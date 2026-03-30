@@ -17,14 +17,14 @@ def is_SAAMR_compliant(prim: Primitive) -> bool:
    
    SAAMR = Standard All-Atom Molecular Representation
 
-   Returns False for empty trees (no leaves) since a valid SAAMR
-   hierarchy must contain at least one atom.
+   A root-only or atom-less tree returns False because a valid SAAMR
+   hierarchy requires all leaves to be atoms at depth 3.  Note that
+   ``prim.leaves`` always includes at least ``prim`` itself (anytree
+   treats childless nodes as their own leaf), so the ``all()`` predicate
+   is never evaluated over an empty iterable.
    """
-   leaves = list(prim.leaves)
-   if not leaves:
-      return False
 
-   return all(leaf.is_atom and (leaf.depth == 3) for leaf in leaves)
+   return all(leaf.is_atom and (leaf.depth == 3) for leaf in prim.leaves)
 
 
 def assign_SAAMR_roles(prim : Primitive) -> None:
