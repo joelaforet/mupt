@@ -429,3 +429,122 @@ class TestDepth4Export:
         )
         for atom in mda_u.atoms:
             assert atom.element == "He", f"Expected 'He', got '{atom.element}'"
+
+
+class TestDepth4BondedExport:
+    """
+    Tests for exporting a bonded depth-4 Primitive tree.
+
+    The ``depth4_bonded_system`` fixture builds:
+        Universe (UNIVERSE)
+          └── Domain (no role)
+                └── Chain (SEGMENT)
+                      ├── Head (RESIDUE)  — 4 atoms, 3 intra-residue bonds
+                      └── Tail (RESIDUE)  — 4 atoms, 3 intra-residue bonds
+                    + 1 inter-residue bond (C–C) at chain level
+
+    These tests verify that ``_resolve_to_atom()`` correctly traverses
+    multi-level hierarchies to resolve bonds at both intra-residue
+    (residue→atom) and inter-residue (chain→residue→atom) depths.
+    """
+
+    def test_depth4_bonded_atom_count(self, depth4_bonded_system, polyethylene_resname_map):
+        """Depth-4 bonded export preserves all 8 atoms."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        assert mda_u.atoms.n_atoms == 8
+
+    def test_depth4_bonded_segment_count(self, depth4_bonded_system, polyethylene_resname_map):
+        """Depth-4 bonded export discovers 1 segment."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        assert mda_u.segments.n_segments == 1
+
+    def test_depth4_bonded_residue_count(self, depth4_bonded_system, polyethylene_resname_map):
+        """Depth-4 bonded export discovers 2 residues (head + tail)."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        assert mda_u.residues.n_residues == 2
+
+    def test_depth4_bonded_total_bond_count(self, depth4_bonded_system, polyethylene_resname_map):
+        """Depth-4 bonded export produces exactly 7 bonds (6 intra + 1 inter)."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        assert len(mda_u.bonds) == 7
+
+    def test_depth4_bonded_bond_count_matches_primitive(
+        self, depth4_bonded_system, polyethylene_resname_map
+    ):
+        """Exported bond count matches the sum of Primitive internal connections."""
+        from anytree import PreOrderIter
+
+        # Depth-agnostic bond count: sum internal_connections at every level
+        expected_total = sum(
+            len(node.internal_connections)
+            for node in PreOrderIter(depth4_bonded_system)
+            if not node.is_leaf
+        )
+
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        assert len(mda_u.bonds) == expected_total, (
+            f"Expected {expected_total} bonds from Primitive hierarchy, "
+            f"got {len(mda_u.bonds)}"
+        )
+
+    def test_depth4_bonded_inter_residue_bond_spans_residues(
+        self, depth4_bonded_system, polyethylene_resname_map
+    ):
+        """
+        The inter-residue bond (C–C) must connect atoms belonging to
+        different residues, verifying that _resolve_to_atom() correctly
+        traced from the chain level through residues to leaf atoms.
+        """
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        # Find bonds that span two different residues
+        cross_residue_bonds = [
+            bond for bond in mda_u.bonds
+            if bond.atoms[0].resindex != bond.atoms[1].resindex
+        ]
+        assert len(cross_residue_bonds) == 1, (
+            f"Expected exactly 1 inter-residue bond, found {len(cross_residue_bonds)}"
+        )
+
+    def test_depth4_bonded_all_atoms_assigned_to_residues(
+        self, depth4_bonded_system, polyethylene_resname_map
+    ):
+        """Every atom is assigned to a residue (resindex is valid)."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        for atom in mda_u.atoms:
+            assert 0 <= atom.resindex < mda_u.residues.n_residues, (
+                f"Atom {atom.index} has invalid resindex {atom.resindex}"
+            )
+
+    def test_depth4_bonded_residue_atom_distribution(
+        self, depth4_bonded_system, polyethylene_resname_map
+    ):
+        """Each residue (head, tail) should contain exactly 4 atoms."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        for res in mda_u.residues:
+            assert len(res.atoms) == 4, (
+                f"Residue '{res.resname}' has {len(res.atoms)} atoms, expected 4"
+            )

@@ -526,3 +526,75 @@ def depth4_helium_system() -> Primitive:
     universe.attach_child(domain)
 
     return universe
+
+
+@pytest.fixture
+def depth4_bonded_system() -> Primitive:
+    """
+    Non-SAAMR depth-4 hierarchy with bonds and manually assigned roles.
+
+    Built from two polyethylene residues (head and tail) connected at
+    the chain level via ``set_topology()``.  An intermediate "domain"
+    node sits between universe and the chain, creating a depth-4 tree
+    that exercises ``_resolve_to_atom()`` at multiple levels.
+
+    Hierarchy (depth of leaves = 4):
+        Universe (UNIVERSE)
+          └── Domain  (no role — intermediate grouping)
+                └── Chain (SEGMENT)
+                      ├── Head "head" (RESIDUE)  — 4 atoms, 3 intra-residue bonds
+                      └── Tail "tail" (RESIDUE)  — 4 atoms, 3 intra-residue bonds
+                    + 1 inter-residue bond (C–C) at chain level
+
+    * should have:
+    - 1 segment
+    - 2 residues
+    - 8 atoms (4 per residue: 1 C + 3 H)
+    - 7 bonds (6 intra-residue + 1 inter-residue)
+    """
+    import networkx as nx
+    from ..mupr.roles import PrimitiveRole
+    from ..mupr.topology import TopologicalStructure
+    from ..interfaces.rdkit import suppress_rdkit_logs
+
+    with suppress_rdkit_logs():
+        head_prim = primitive_from_smiles(
+            "[H:1]-[CH2:2]-*",
+            ensure_explicit_Hs=True,
+            embed_positions=True,
+            label="head",
+        )
+        tail_prim = primitive_from_smiles(
+            "*-[CH2:1]-[H:2]",
+            ensure_explicit_Hs=True,
+            embed_positions=True,
+            label="tail",
+        )
+
+    # Build chain with inter-residue bond
+    chain = Primitive(label="chain")
+    chain.attach_child(head_prim)
+    chain.attach_child(tail_prim)
+    chain.set_topology(
+        nx.path_graph(
+            chain.children_by_handle.keys(),
+            create_using=TopologicalStructure,
+        ),
+        max_registration_iter=100,
+    )
+
+    # Wrap in domain (no role) then universe — creates depth-4
+    domain = Primitive(label="domain")
+    domain.attach_child(chain)
+
+    universe = Primitive(label="universe", role=PrimitiveRole.UNIVERSE)
+    universe.attach_child(domain)
+
+    # Assign export roles manually
+    chain.role = PrimitiveRole.SEGMENT
+    head_prim.role = PrimitiveRole.RESIDUE
+    tail_prim.role = PrimitiveRole.RESIDUE
+    for leaf in universe.leaves:
+        leaf.role = PrimitiveRole.PARTICLE
+
+    return universe
