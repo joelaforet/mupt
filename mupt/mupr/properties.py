@@ -16,9 +16,15 @@ def is_SAAMR_compliant(prim: Primitive) -> bool:
    as universe -> molecule -> repeat-unit -> atom
    
    SAAMR = Standard All-Atom Molecular Representation
-   """
 
-   return all(leaf.is_atom and (leaf.depth == 3) for leaf in prim.leaves)
+   Returns False for empty trees (no leaves) since a valid SAAMR
+   hierarchy must contain at least one atom.
+   """
+   leaves = list(prim.leaves)
+   if not leaves:
+      return False
+
+   return all(leaf.is_atom and (leaf.depth == 3) for leaf in leaves)
 
 
 def assign_SAAMR_roles(prim : Primitive) -> None:
