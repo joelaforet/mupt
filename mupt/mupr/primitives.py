@@ -1,7 +1,7 @@
 '''Fundamental data structures for multiscale molecular representation'''
 
-__author__ = 'Timotej Bernat'
-__email__ = 'timotej.bernat@colorado.edu'
+__author__ = 'Timotej Bernat, Joseph R. Laforet Jr.'
+__email__ = 'timotej.bernat@colorado.edu, jola3134@colorado.edu'
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -51,6 +51,7 @@ from .connection import (
     UnboundConnectorError,
 )
 from .topology import TopologicalStructure, GraphLayout
+from .roles import PrimitiveRole
 from .embedding import infer_connections_from_topology, ConnectorReference, flexible_connector_reference
 
 from ..mutils.containers import UniqueRegistry
@@ -110,6 +111,7 @@ class Primitive(NodeMixin, RigidlyTransformable):
         children : Optional[Iterable['Primitive']]=None,
         label : Optional[PrimitiveLabel]=None,
         metadata : Optional[dict[Hashable, Any]]=None,
+        role : Optional[PrimitiveRole]=None,
     ) -> None:
         # essential components
         ## external bounded shape
@@ -140,6 +142,9 @@ class Primitive(NodeMixin, RigidlyTransformable):
         # additional descriptors
         self.label = type(self).DEFAULT_LABEL if (label is None) else label
         self.metadata = metadata or dict()
+        self._role = None
+        if role is not None:
+            self.role = role
         
         
     # Chemical atom and bond properties
@@ -163,6 +168,37 @@ class Primitive(NodeMixin, RigidlyTransformable):
     def is_atom(self) -> bool:
         '''Whether the Primitive at hand represents a single atom'''
         return self.is_leaf and (self.element is not None)
+
+    @property
+    def role(self) -> Optional[PrimitiveRole]:
+        '''Canonical role this Primitive plays in an exportable hierarchy'''
+        return self._role
+
+    @role.setter
+    def role(self, new_role : Optional[PrimitiveRole]) -> None:
+        if (new_role is not None) and (not isinstance(new_role, PrimitiveRole)):
+            raise TypeError(f'Invalid role type {type(new_role)}')
+        self._role = new_role
+
+    @property
+    def is_particle(self) -> bool:
+        '''Whether this Primitive is tagged as an exportable particle'''
+        return self._role == PrimitiveRole.PARTICLE
+
+    @property
+    def is_residue(self) -> bool:
+        '''Whether this Primitive is tagged as a residue-level grouping'''
+        return self._role == PrimitiveRole.RESIDUE
+
+    @property
+    def is_segment(self) -> bool:
+        '''Whether this Primitive is tagged as a segment-level entity'''
+        return self._role == PrimitiveRole.SEGMENT
+
+    @property
+    def is_universe(self) -> bool:
+        '''Whether this Primitive is tagged as the root universe'''
+        return self._role == PrimitiveRole.UNIVERSE
 
     @property
     def num_atoms(self) -> int:
@@ -1055,6 +1091,7 @@ class Primitive(NodeMixin, RigidlyTransformable):
             label=self.label,
             metadata=deepcopy(self.metadata),
         )
+        clone_primitive._role = self._role
         
         # transfer connection info
         clone_primitive._connectors = self._connectors.copy(
