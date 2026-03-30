@@ -52,14 +52,51 @@ def _pdb_resname(label: Hashable, resname_map: dict[str, str]) -> str:
     return name.upper()
 
 
-def _resolve_to_atom(parent: Primitive, conn_ref: ConnectorReference) -> Primitive:
-    """Recursively follow external_connectors to find the leaf atom."""
-    child = parent.fetch_child(conn_ref.primitive_handle)
+def _resolve_to_atom(
+    parent: Primitive,
+    conn_ref: ConnectorReference,
+    _depth: int = 0,
+    _max_depth: int = 50,
+) -> Primitive:
+    """Recursively follow external_connectors to find the leaf atom.
+
+    Raises
+    ------
+    ValueError
+        If the connector chain is broken (missing child or external
+        connector entry) or if recursion exceeds *_max_depth*, which
+        indicates a cycle in the connector graph.
+    """
+    if _depth > _max_depth:
+        raise ValueError(
+            f"_resolve_to_atom exceeded maximum recursion depth ({_max_depth}) "
+            f"starting from parent '{parent.label}' at connector "
+            f"({conn_ref.primitive_handle}, {conn_ref.connector_handle}). "
+            "This usually indicates a cycle in the connector graph."
+        )
+
+    try:
+        child = parent.fetch_child(conn_ref.primitive_handle)
+    except (KeyError, AttributeError) as exc:
+        raise ValueError(
+            f"Cannot resolve atom: child '{conn_ref.primitive_handle}' "
+            f"not found under parent '{parent.label}'."
+        ) from exc
+
     if child.is_atom:
         return child
 
-    next_ref = child.external_connectors[conn_ref.connector_handle]
-    return _resolve_to_atom(child, next_ref)
+    try:
+        next_ref = child.external_connectors[conn_ref.connector_handle]
+    except KeyError as exc:
+        raise ValueError(
+            f"Cannot resolve atom: external connector "
+            f"'{conn_ref.connector_handle}' not found on child "
+            f"'{child.label}' (parent '{parent.label}'). "
+            "Ensure the primitive tree has well-formed connector chains."
+        ) from exc
+
+    return _resolve_to_atom(child, next_ref, _depth=_depth + 1, _max_depth=_max_depth)
 
 
 def _bond_order_from_conn_ref(parent: Primitive, conn_ref: ConnectorReference) -> float:
@@ -293,6 +330,9 @@ class AllAtomExportStrategy(MDAExportStrategy):
                 idx2 = atom_id_to_global[id(atom2)]
                 bond_pair = tuple(sorted((idx1, idx2)))
                 if bond_pair in data.bonds_set:
+                    # Duplicate atom-pair: MuPT's bondable_with() enforces
+                    # symmetric bondtype, so the same pair always resolves
+                    # to the same bond order — safe to skip.
                     continue
 
                 data.bonds.append(bond_pair)
