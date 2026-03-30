@@ -91,7 +91,16 @@ def _bond_order_from_conn_ref(parent: Primitive, conn_ref: ConnectorReference) -
         return 1.0
 
     bondtype: Optional[str] = getattr(connector, "bondtype", None)
-    return BOND_ORDER.get(bondtype, 1.0)
+    order = BOND_ORDER.get(bondtype, 1.0)
+    if bondtype is not None and bondtype not in BOND_ORDER:
+        LOGGER.debug(
+            "Unmapped bondtype %r on connector %s of child %s; "
+            "defaulting bond order to 1.0",
+            bondtype,
+            conn_ref.connector_handle,
+            conn_ref.primitive_handle,
+        )
+    return order
 
 
 @dataclass
