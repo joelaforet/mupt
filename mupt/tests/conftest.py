@@ -461,3 +461,68 @@ def single_helium_atom_saamr() -> Primitive:
     assign_SAAMR_roles(universe_prim)
 
     return universe_prim
+
+
+@pytest.fixture
+def depth4_helium_system() -> Primitive:
+    """
+    Non-SAAMR depth-4 hierarchy with manually assigned roles.
+
+    Demonstrates that the strategy-based exporter handles arbitrary
+    tree depth when roles are set manually.  An intermediate "domain"
+    node sits between universe and chains but carries no export role.
+
+    Hierarchy (depth of leaves = 4):
+        Universe (UNIVERSE)
+          └── Domain  (no role — intermediate grouping)
+                ├── Chain1 (SEGMENT)
+                │     └── Residue1 "He_unit" (RESIDUE)
+                │           ├── He (PARTICLE)
+                │           └── He (PARTICLE)
+                └── Chain2 (SEGMENT)
+                      └── Residue2 "He_unit" (RESIDUE)
+                            └── He (PARTICLE)
+
+    * should have:
+    - 2 segments (Chain1, Chain2)
+    - 2 residues
+    - 3 atoms (He) at position [0, 0, 0]
+    - 0 bonds
+    """
+    from ..geometry.shapes import Sphere
+    from ..mupr.roles import PrimitiveRole
+    from periodictable import elements
+
+    # Atoms
+    atom1 = Primitive(label="He", element=elements.He, role=PrimitiveRole.PARTICLE)
+    atom1.shape = Sphere(0.49)
+    atom2 = Primitive(label="He", element=elements.He, role=PrimitiveRole.PARTICLE)
+    atom2.shape = Sphere(0.49)
+    atom3 = Primitive(label="He", element=elements.He, role=PrimitiveRole.PARTICLE)
+    atom3.shape = Sphere(0.49)
+
+    # Residues
+    res1 = Primitive(label="He_unit", role=PrimitiveRole.RESIDUE)
+    res1.attach_child(atom1)
+    res1.attach_child(atom2)
+
+    res2 = Primitive(label="He_unit", role=PrimitiveRole.RESIDUE)
+    res2.attach_child(atom3)
+
+    # Chains (segments in MDAnalysis terms)
+    chain1 = Primitive(label="chain1", role=PrimitiveRole.SEGMENT)
+    chain1.attach_child(res1)
+
+    chain2 = Primitive(label="chain2", role=PrimitiveRole.SEGMENT)
+    chain2.attach_child(res2)
+
+    # Domain — intermediate grouping with no export role
+    domain = Primitive(label="domain")
+    domain.attach_child(chain1)
+    domain.attach_child(chain2)
+
+    # Universe
+    universe = Primitive(label="universe", role=PrimitiveRole.UNIVERSE)
+    universe.attach_child(domain)
+
+    return universe

@@ -355,3 +355,76 @@ def test_segment_count_preservation(
 
     mda_universe = primitive_to_mdanalysis(univprim, resname_map=resname_map)
     assert mda_universe.segments.n_segments == expected_segments
+
+
+# ============================================================================
+# DEPTH-4 (NON-SAAMR) EXPORT TESTS
+# ============================================================================
+
+class TestDepth4Export:
+    """
+    Tests for exporting a depth-4 Primitive tree (Universe→Domain→Chain→Residue→Atom)
+    where an intermediate "domain" node exists between universe and segments.
+
+    These verify that the strategy-based exporter handles arbitrary tree depth
+    when roles are manually assigned, without relying on SAAMR's fixed 3-level
+    hierarchy.
+    """
+
+    def test_depth4_atom_count(self, depth4_helium_system, helium_resname_map):
+        """Depth-4 export preserves all 3 He atoms."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_helium_system, resname_map=helium_resname_map, strategy=strategy
+        )
+        assert mda_u.atoms.n_atoms == 3
+
+    def test_depth4_segment_count(self, depth4_helium_system, helium_resname_map):
+        """Depth-4 export discovers 2 segments despite intermediate domain node."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_helium_system, resname_map=helium_resname_map, strategy=strategy
+        )
+        assert mda_u.segments.n_segments == 2
+
+    def test_depth4_residue_count(self, depth4_helium_system, helium_resname_map):
+        """Depth-4 export discovers 2 residues across both chains."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_helium_system, resname_map=helium_resname_map, strategy=strategy
+        )
+        assert mda_u.residues.n_residues == 2
+
+    def test_depth4_resnames(self, depth4_helium_system, helium_resname_map):
+        """Depth-4 export applies resname_map correctly to all residues."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_helium_system, resname_map=helium_resname_map, strategy=strategy
+        )
+        for res in mda_u.residues:
+            assert res.resname == "HEL", f"Expected 'HEL', got '{res.resname}'"
+
+    def test_depth4_no_bonds(self, depth4_helium_system, helium_resname_map):
+        """Depth-4 helium system has no bonds; export should reflect that."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_helium_system, resname_map=helium_resname_map, strategy=strategy
+        )
+        # MDAnalysis raises NoDataError when accessing .bonds if none exist
+        has_bonds = (
+            hasattr(mda_u, "bonds")
+            and hasattr(mda_u.atoms, "_topology")
+            and "bonds" in mda_u.atoms._topology.attrs
+        )
+        if has_bonds:
+            assert len(mda_u.bonds) == 0
+        # If no bond attribute at all, that's also correct for 0 bonds
+
+    def test_depth4_element_names(self, depth4_helium_system, helium_resname_map):
+        """All atoms in depth-4 helium system should be He."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_helium_system, resname_map=helium_resname_map, strategy=strategy
+        )
+        for atom in mda_u.atoms:
+            assert atom.element == "He", f"Expected 'He', got '{atom.element}'"
