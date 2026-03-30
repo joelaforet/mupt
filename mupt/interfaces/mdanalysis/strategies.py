@@ -147,7 +147,15 @@ class AllAtomExportStrategy(MDAExportStrategy):
         return "All-atom"
 
     def validate(self, root: Primitive) -> None:
-        """Validate role assignments needed for all-atom export."""
+        """Validate role assignments needed for all-atom export.
+
+        Checks performed:
+        - Root must have UNIVERSE role
+        - At least one SEGMENT and one RESIDUE must exist
+        - All leaves must have PARTICLE role
+        - No SEGMENT may contain a descendant SEGMENT (nesting forbidden)
+        - No RESIDUE may contain a descendant RESIDUE (nesting forbidden)
+        """
         if root.role != PrimitiveRole.UNIVERSE:
             raise ValueError(
                 "Root Primitive must have role=PrimitiveRole.UNIVERSE. "
@@ -172,6 +180,33 @@ class AllAtomExportStrategy(MDAExportStrategy):
                 raise ValueError(
                     "All leaves must have role=PrimitiveRole.PARTICLE. "
                     "Assign roles via assign_SAAMR_roles() or set them manually."
+                )
+
+        # Reject nested same-role nodes that would cause double-counting
+        for seg in segment_nodes:
+            nested_segs = [
+                node for node in PreOrderIter(seg)
+                if node.role == PrimitiveRole.SEGMENT and node is not seg
+            ]
+            if nested_segs:
+                raise ValueError(
+                    f"SEGMENT '{seg.label}' contains nested SEGMENT(s) "
+                    f"{[n.label for n in nested_segs]}. "
+                    "Nested SEGMENT roles are not allowed — each SEGMENT must "
+                    "define a non-overlapping partition of the hierarchy."
+                )
+
+        for res in residue_nodes:
+            nested_res = [
+                node for node in PreOrderIter(res)
+                if node.role == PrimitiveRole.RESIDUE and node is not res
+            ]
+            if nested_res:
+                raise ValueError(
+                    f"RESIDUE '{res.label}' contains nested RESIDUE(s) "
+                    f"{[n.label for n in nested_res]}. "
+                    "Nested RESIDUE roles are not allowed — each RESIDUE must "
+                    "define a non-overlapping partition of its parent SEGMENT."
                 )
 
     def collect_topology(self, root: Primitive, resname_map: dict[str, str]) -> MDATopologyData:
