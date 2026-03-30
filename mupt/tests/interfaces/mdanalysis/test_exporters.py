@@ -523,6 +523,31 @@ class TestDepth4BondedExport:
             f"Expected exactly 1 inter-residue bond, found {len(cross_residue_bonds)}"
         )
 
+    def test_depth4_bonded_inter_residue_bond_connects_carbons(
+        self, depth4_bonded_system, polyethylene_resname_map
+    ):
+        """
+        The inter-residue bond must connect two carbon atoms, validating
+        that _resolve_to_atom() resolved to the correct atoms (not just
+        any atoms in different residues).
+        """
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        cross_residue_bonds = [
+            bond for bond in mda_u.bonds
+            if bond.atoms[0].resindex != bond.atoms[1].resindex
+        ]
+        assert len(cross_residue_bonds) == 1
+        bond = cross_residue_bonds[0]
+        assert bond.atoms[0].element == "C", (
+            f"Expected first atom of inter-residue bond to be C, got '{bond.atoms[0].element}'"
+        )
+        assert bond.atoms[1].element == "C", (
+            f"Expected second atom of inter-residue bond to be C, got '{bond.atoms[1].element}'"
+        )
+
     def test_depth4_bonded_all_atoms_assigned_to_residues(
         self, depth4_bonded_system, polyethylene_resname_map
     ):
