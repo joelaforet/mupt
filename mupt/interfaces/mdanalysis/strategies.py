@@ -153,7 +153,8 @@ class AllAtomExportStrategy(MDAExportStrategy):
                 data.atom_positions.append([0.0, 0.0, 0.0])
 
         # Walk segment -> residue -> particle to build hierarchy mapping
-        segment_nodes = [child for child in root.children if child.role == PrimitiveRole.SEGMENT]
+        # Use PreOrderIter to find SEGMENT nodes at any depth (not just direct children)
+        segment_nodes = [node for node in PreOrderIter(root) if node.role == PrimitiveRole.SEGMENT]
         data.num_segments = len(segment_nodes)
         mapped_count = 0
 
