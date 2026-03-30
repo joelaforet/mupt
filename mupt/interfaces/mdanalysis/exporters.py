@@ -32,53 +32,6 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 
-def _pdb_resname(label: str, resname_map: dict[str, str]) -> str:
-    """
-    Map a residue label to a PDB-compliant 3-character residue name.
-
-    This helper function is used to ensure residue names are valid for
-    PDB export and downstream visualization (e.g., in PyMOL).
-    It optionally applies a user-provided mapping from original labels
-    to 3-letter codes and enforces uppercase formatting.
-
-    Parameters
-    ----------
-    label : str
-        Original residue label from the Primitive object.
-    resname_map : dict, optional
-        Optional mapping from residue labels to 3-character PDB residue names.
-        If the label is in the dictionary, the mapped value is used.
-        Otherwise, the original label is returned.
-
-    Returns
-    -------
-    str
-        Uppercase, 3-character PDB-compliant residue name.
-
-    Raises
-    ------
-    ValueError
-        If the resulting residue name is not exactly 3 characters long.
-
-    Examples
-    --------
-    >>> _pdb_resname('head', {'head': 'HEA', 'tail': 'TAL'})
-    'HEA'
-    >>> _pdb_resname('mid', {'head': 'HEA', 'tail': 'TAL'})
-    'MID'
-    """
-    if resname_map and label in resname_map:
-        name = resname_map[label]
-    else:
-        name = label
-
-    if len(name) != 3:
-        raise ValueError(
-            f"Residue name '{name}' (from '{label}') is not 3 characters long"
-        )
-    return name.upper()
-
-
 def _build_mda_universe(data: MDATopologyData) -> mda.Universe:
     """
     Construct an MDAnalysis Universe from pre-collected topology data.
