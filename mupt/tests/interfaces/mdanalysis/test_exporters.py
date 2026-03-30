@@ -16,7 +16,6 @@ from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
 from mupt.interfaces.mdanalysis.strategies import AllAtomExportStrategy
 from mupt.mupr.primitives import Primitive
 from mupt.mupr.roles import PrimitiveRole
-from mupt.mupr.properties import assign_SAAMR_roles
 from mupt.chemistry import ELEMENTS
 
 
@@ -542,6 +541,20 @@ class TestDepth4BondedExport:
             depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
         )
         assert len(mda_u.bonds) == 7
+
+    def test_depth4_bonded_bond_orders_are_single(
+        self, depth4_bonded_system, polyethylene_resname_map
+    ):
+        """All bonds in the depth-4 polyethylene fixture are single (order 1)."""
+        strategy = AllAtomExportStrategy()
+        mda_u = primitive_to_mdanalysis(
+            depth4_bonded_system, resname_map=polyethylene_resname_map, strategy=strategy
+        )
+        for bond in mda_u.bonds:
+            assert bond.order == 1, (
+                f"Bond {bond.atoms[0].index}-{bond.atoms[1].index} has order "
+                f"{bond.order}, expected 1"
+            )
 
     def test_depth4_bonded_bond_count_matches_primitive(
         self, depth4_bonded_system, polyethylene_resname_map
