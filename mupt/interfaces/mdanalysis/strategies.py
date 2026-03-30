@@ -6,6 +6,7 @@ __email__ = "jola3134@colorado.edu"
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import logging
+from collections.abc import Hashable
 from typing import Optional
 
 from anytree import PreOrderIter
@@ -18,8 +19,29 @@ from ...mupr.roles import PrimitiveRole
 LOGGER = logging.getLogger(__name__)
 
 
-def _pdb_resname(label: str, resname_map: dict[str, str]) -> str:
-    """Map a residue label to a PDB-compliant 3-character residue name."""
+def _pdb_resname(label: Hashable, resname_map: dict[str, str]) -> str:
+    """Map a residue label to a PDB-compliant 3-character residue name.
+
+    Parameters
+    ----------
+    label : Hashable
+        Original residue label from the Primitive object.  Non-string
+        labels are normalized to ``str(label)`` before lookup and
+        length validation.
+    resname_map : dict[str, str]
+        Mapping from residue labels to 3-character PDB residue names.
+
+    Returns
+    -------
+    str
+        Uppercase, 3-character PDB-compliant residue name.
+
+    Raises
+    ------
+    ValueError
+        If the resulting residue name is not exactly 3 characters long.
+    """
+    label = str(label)
     if resname_map and label in resname_map:
         name = resname_map[label]
     else:
