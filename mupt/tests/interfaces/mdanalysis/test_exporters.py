@@ -12,7 +12,10 @@ __email__ = "jola3134@colorado.edu"
 
 import pytest
 from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
+from mupt.interfaces.mdanalysis.strategies import AllAtomExportStrategy
 from mupt.mupr.primitives import Primitive
+from mupt.mupr.roles import PrimitiveRole
+from mupt.mupr.properties import assign_SAAMR_roles
 from mupt.chemistry import ELEMENTS
 
 
@@ -232,3 +235,123 @@ def test_invalid_resname_map_raises_value_error(primitive_fixture, resname_map, 
     univprim = request.getfixturevalue(primitive_fixture)
     with pytest.raises(ValueError):
         primitive_to_mdanalysis(univprim, resname_map=resname_map)
+
+
+# ============================================================================
+# STRATEGY-BASED EXPORT TESTS
+# ============================================================================
+
+@pytest.mark.parametrize(
+    "primitive_fixture,resname_fixture",
+    [
+        ("single_polyethylene_2mer", "polyethylene_resname_map"),
+        ("single_polyethylene_3mer", "polyethylene_resname_map"),
+        ("single_helium_atom_saamr", "helium_resname_map"),
+    ],
+    ids=["2mer_explicit", "3mer_explicit", "helium_explicit"],
+)
+def test_explicit_strategy_produces_same_result(primitive_fixture, resname_fixture, request):
+    """
+    Verify that passing AllAtomExportStrategy explicitly produces the
+    same atom/bond counts as the default (auto-assign) path.
+    """
+    univprim = request.getfixturevalue(primitive_fixture)
+    resname_map = request.getfixturevalue(resname_fixture)
+
+    # Default path (auto-assigns roles internally)
+    mda_default = primitive_to_mdanalysis(univprim, resname_map=resname_map)
+
+    # Explicit strategy path (roles already assigned by fixture)
+    strategy = AllAtomExportStrategy()
+    mda_explicit = primitive_to_mdanalysis(univprim, resname_map=resname_map, strategy=strategy)
+
+    assert mda_default.atoms.n_atoms == mda_explicit.atoms.n_atoms
+    assert mda_default.residues.n_residues == mda_explicit.residues.n_residues
+    assert mda_default.segments.n_segments == mda_explicit.segments.n_segments
+
+    # Bond comparison — handle the no-bonds case (e.g. single helium atom)
+    default_has_bonds = hasattr(mda_default, "bonds") and hasattr(mda_default.atoms, "_topology") and "bonds" in mda_default.atoms._topology.attrs
+    explicit_has_bonds = hasattr(mda_explicit, "bonds") and hasattr(mda_explicit.atoms, "_topology") and "bonds" in mda_explicit.atoms._topology.attrs
+    if default_has_bonds and explicit_has_bonds:
+        assert len(mda_default.bonds) == len(mda_explicit.bonds)
+    else:
+        assert default_has_bonds == explicit_has_bonds
+
+
+def test_strategy_rejects_unroled_primitives():
+    """
+    AllAtomExportStrategy.validate() must raise ValueError when
+    Primitives lack role assignments, with a message pointing to
+    assign_SAAMR_roles() or manual role assignment.
+    """
+    universe = Primitive(label="universe")
+    molecule = Primitive(label="mol")
+    repeat_unit = Primitive(label="unit")
+    atom = Primitive(label="He", element=ELEMENTS[2])
+    universe.attach_child(molecule)
+    molecule.attach_child(repeat_unit)
+    repeat_unit.attach_child(atom)
+
+    strategy = AllAtomExportStrategy()
+    with pytest.raises(ValueError, match="assign_SAAMR_roles"):
+        strategy.validate(universe)
+
+
+def test_strategy_rejects_missing_segment_role():
+    """
+    AllAtomExportStrategy.validate() must raise ValueError when
+    no SEGMENT-role nodes exist, even if root has UNIVERSE role.
+    """
+    universe = Primitive(label="universe", role=PrimitiveRole.UNIVERSE)
+    molecule = Primitive(label="mol")  # No role assigned
+    repeat_unit = Primitive(label="unit", role=PrimitiveRole.RESIDUE)
+    atom = Primitive(label="He", element=ELEMENTS[2], role=PrimitiveRole.PARTICLE)
+    universe.attach_child(molecule)
+    molecule.attach_child(repeat_unit)
+    repeat_unit.attach_child(atom)
+
+    strategy = AllAtomExportStrategy()
+    with pytest.raises(ValueError, match="SEGMENT"):
+        strategy.validate(universe)
+
+
+def test_strategy_rejects_unroled_leaves():
+    """
+    AllAtomExportStrategy.validate() must raise ValueError when
+    leaf Primitives lack PARTICLE role, even if upper levels are set.
+    """
+    universe = Primitive(label="universe", role=PrimitiveRole.UNIVERSE)
+    molecule = Primitive(label="mol", role=PrimitiveRole.SEGMENT)
+    repeat_unit = Primitive(label="unit", role=PrimitiveRole.RESIDUE)
+    atom = Primitive(label="He", element=ELEMENTS[2])  # No role
+    universe.attach_child(molecule)
+    molecule.attach_child(repeat_unit)
+    repeat_unit.attach_child(atom)
+
+    strategy = AllAtomExportStrategy()
+    with pytest.raises(ValueError, match="PARTICLE"):
+        strategy.validate(universe)
+
+
+@pytest.mark.parametrize(
+    "primitive_fixture,resname_fixture,expected_segments",
+    [
+        ("single_polyethylene_2mer", "polyethylene_resname_map", 1),
+        ("multi_polyethylene_system", "polyethylene_resname_map", 10),
+        ("PES_copolymer", "PES_resname_map", 5),
+        ("single_helium_atom_saamr", "helium_resname_map", 1),
+    ],
+    ids=["2mer_1seg", "multi_10seg", "PES_5seg", "helium_1seg"],
+)
+def test_segment_count_preservation(
+    primitive_fixture, resname_fixture, expected_segments, request
+):
+    """
+    Verify that the number of MDAnalysis segments matches the number
+    of SEGMENT-role children in the Primitive hierarchy.
+    """
+    univprim = request.getfixturevalue(primitive_fixture)
+    resname_map = request.getfixturevalue(resname_fixture)
+
+    mda_universe = primitive_to_mdanalysis(univprim, resname_map=resname_map)
+    assert mda_universe.segments.n_segments == expected_segments
