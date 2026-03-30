@@ -190,7 +190,8 @@ def primitive_to_mdanalysis(
                 "universe -> chains -> residues -> atoms. Ensure that the input "
                 "Primitive is constructed or reordered to follow this hierarchy "
                 "before calling primitive_to_mdanalysis().\n"
-                "Alternatively, assign roles manually and pass an explicit strategy."
+                "Alternatively, call assign_SAAMR_roles() to tag roles, or assign "
+                "roles manually and pass an explicit strategy."
             )
         assign_SAAMR_roles(univprim)
         strategy = AllAtomExportStrategy()
