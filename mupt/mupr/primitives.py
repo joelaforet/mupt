@@ -142,9 +142,8 @@ class Primitive(NodeMixin, RigidlyTransformable):
         # additional descriptors
         self.label = type(self).DEFAULT_LABEL if (label is None) else label
         self.metadata = metadata or dict()
-        self._role = None
         if role is not None:
-            self.role = role
+            self.metadata['role'] = role
         
         
     # Chemical atom and bond properties
@@ -170,35 +169,35 @@ class Primitive(NodeMixin, RigidlyTransformable):
         return self.is_leaf and (self.element is not None)
 
     @property
-    def role(self) -> Optional[PrimitiveRole]:
+    def role(self) -> PrimitiveRole:
         '''Canonical role this Primitive plays in an exportable hierarchy'''
-        return self._role
+        return self.metadata.get('role', PrimitiveRole.UNASSIGNED)
 
     @role.setter
-    def role(self, new_role : Optional[PrimitiveRole]) -> None:
-        if (new_role is not None) and (not isinstance(new_role, PrimitiveRole)):
+    def role(self, new_role : PrimitiveRole) -> None:
+        if not isinstance(new_role, PrimitiveRole):
             raise TypeError(f'Invalid role type {type(new_role)}')
-        self._role = new_role
+        self.metadata['role'] = new_role
 
     @property
     def is_particle(self) -> bool:
         '''Whether this Primitive is tagged as an exportable particle'''
-        return self._role == PrimitiveRole.PARTICLE
+        return self.role == PrimitiveRole.PARTICLE
 
     @property
     def is_residue(self) -> bool:
         '''Whether this Primitive is tagged as a residue-level grouping'''
-        return self._role == PrimitiveRole.RESIDUE
+        return self.role == PrimitiveRole.RESIDUE
 
     @property
     def is_segment(self) -> bool:
         '''Whether this Primitive is tagged as a segment-level entity'''
-        return self._role == PrimitiveRole.SEGMENT
+        return self.role == PrimitiveRole.SEGMENT
 
     @property
     def is_universe(self) -> bool:
         '''Whether this Primitive is tagged as the root universe'''
-        return self._role == PrimitiveRole.UNIVERSE
+        return self.role == PrimitiveRole.UNIVERSE
 
     @property
     def num_atoms(self) -> int:
@@ -1091,7 +1090,6 @@ class Primitive(NodeMixin, RigidlyTransformable):
             label=self.label,
             metadata=deepcopy(self.metadata),
         )
-        clone_primitive._role = self._role
         
         # transfer connection info
         clone_primitive._connectors = self._connectors.copy(
