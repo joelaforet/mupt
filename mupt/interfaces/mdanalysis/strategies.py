@@ -61,14 +61,16 @@ def _resolve_to_atom(
     ValueError
         If the connector chain is broken (missing child or external
         connector entry) or if recursion exceeds *_max_depth*, which
-        indicates a cycle in the connector graph.
+        indicates non-terminating connector resolution, typically caused
+        by malformed hierarchy or connector references.
     """
     if _depth > _max_depth:
         raise ValueError(
             f"_resolve_to_atom exceeded maximum recursion depth ({_max_depth}) "
             f"starting from parent '{parent.label}' at connector "
             f"({conn_ref.primitive_handle}, {conn_ref.connector_handle}). "
-            "This usually indicates a cycle in the connector graph."
+            "This indicates non-terminating connector resolution, likely caused by "
+            "malformed hierarchy or connector references."
         )
 
     try:
