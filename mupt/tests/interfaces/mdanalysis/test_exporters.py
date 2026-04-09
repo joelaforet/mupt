@@ -299,10 +299,10 @@ def test_explicit_strategy_produces_same_result(primitive_fixture, resname_fixtu
         assert default_has_bonds == explicit_has_bonds
 
 
-def test_strategy_rejects_unroled_primitives():
+def test_strategy_rejects_no_role_primitives():
     """
     AllAtomExportStrategy.validate() must raise ValueError when
-    Primitives lack role assignments, with a message pointing to
+    Primitives have no_role status, with a message pointing to
     assign_SAAMR_roles() or manual role assignment.
     """
     universe = Primitive(label="universe")
@@ -336,10 +336,10 @@ def test_strategy_rejects_missing_segment_role():
         strategy.validate(universe)
 
 
-def test_strategy_rejects_unroled_leaves():
+def test_strategy_rejects_no_role_leaves():
     """
     AllAtomExportStrategy.validate() must raise ValueError when
-    leaf Primitives lack PARTICLE role, even if upper levels are set.
+    leaf Primitives are without roles, even if upper levels are set.
     """
     universe = Primitive(label="universe", role=PrimitiveRole.UNIVERSE)
     molecule = Primitive(label="mol", role=PrimitiveRole.SEGMENT)
