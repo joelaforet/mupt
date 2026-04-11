@@ -11,6 +11,7 @@ __author__ = "Joseph R. Laforet Jr."
 __email__ = "jola3134@colorado.edu"
 
 from enum import Enum
+from anytree import PreOrderIter
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -69,8 +70,6 @@ def has_SAAMR_roles(prim: 'Primitive') -> bool:
     has_strict_SAAMR_depth : Checks for strict depth-3 SAAMR structure.
     assign_SAAMR_roles : Assigns roles to a strict SAAMR hierarchy.
     """
-    from anytree import PreOrderIter
-
     required = {
         PrimitiveRole.UNIVERSE,
         PrimitiveRole.SEGMENT,
@@ -104,7 +103,7 @@ def assign_SAAMR_roles(prim: 'Primitive') -> None:
     has_SAAMR_roles : Checks that roles are already assigned.
     has_strict_SAAMR_depth : The structural precondition for this function.
     """
-    from .mupr.properties import has_strict_SAAMR_depth
+    from .mupr.properties import has_strict_SAAMR_depth # imported at runtime to avoid circular reference with Primitive
 
     if not has_strict_SAAMR_depth(prim):
         raise ValueError(

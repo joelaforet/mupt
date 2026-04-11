@@ -16,6 +16,7 @@ from ...mupr.embedding import ConnectorReference
 from ...mupr.primitives import Primitive
 from ...roles import PrimitiveRole
 
+
 def _pdb_resname(label: Hashable, resname_map: dict[str, str]) -> str:
     """Map a residue label to a PDB-compliant 3-character residue name.
 

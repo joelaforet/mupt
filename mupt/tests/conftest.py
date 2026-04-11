@@ -5,31 +5,31 @@ File to house various fixtures that are used by multiple tests.
 __author__ = "Joseph R. Laforet Jr."
 __email__ = "jola3134@colorado.edu"
 
-import pytest
-
 import logging
+logger = logging.getLogger(__name__)
+
+import pytest
 from typing import Any, Generator, Mapping, Iterable, Optional
 
 import numpy as np
 import networkx as nx
+from periodictable import elements
 
 from ..mupr.primitives import Primitive
 from ..mupr.topology import TopologicalStructure
 from ..geometry.coordinates.reference import origin
 from ..geometry.coordinates.directions import random_unit_vector
 from ..geometry.transforms.rigid import rigid_vector_coalignment
+from ..geometry.shapes import Sphere
 from ..interfaces.smiles import primitive_from_smiles
 from ..interfaces.rdkit import suppress_rdkit_logs
 from ..builders.random_walk import AngleConstrainedRandomWalk
-from ..roles import assign_SAAMR_roles
+from ..roles import assign_SAAMR_roles, PrimitiveRole
 
-
-logger = logging.getLogger(__name__)
 
 # DEV:JRL The following functions are useful helpers to streamline the building
 # of copolymer systems from SMILES. They were taken from the ellipsoidal_chain_placement.ipynb
 # tutorial notebook authored by @timbernat
-
 
 def sequence_repeat_units(
     chain_len: int,
@@ -438,9 +438,6 @@ def single_helium_atom_saamr() -> Primitive:
     - 1 repeat unit
     - 1 atom (He) at position [0, 0, 0]
     """
-    from ..geometry.shapes import Sphere
-    from periodictable import elements
-
     # Create the atom-level primitive (Helium)
     atom_prim = Primitive(label="He")
     atom_prim.element = elements.He  # Set element to make it an atom
@@ -489,10 +486,6 @@ def depth4_helium_system() -> Primitive:
     - 3 atoms (He) at position [0, 0, 0]
     - 0 bonds
     """
-    from ..geometry.shapes import Sphere
-    from ..roles import PrimitiveRole
-    from periodictable import elements
-
     # Atoms
     atom1 = Primitive(label="He", element=elements.He, role=PrimitiveRole.PARTICLE)
     atom1.shape = Sphere(0.49)
@@ -552,11 +545,6 @@ def depth4_bonded_system() -> Primitive:
     - 8 atoms (4 per residue: 1 C + 3 H)
     - 7 bonds (6 intra-residue + 1 inter-residue)
     """
-    import networkx as nx
-    from ..roles import PrimitiveRole
-    from ..mupr.topology import TopologicalStructure
-    from ..interfaces.rdkit import suppress_rdkit_logs
-
     with suppress_rdkit_logs():
         head_prim = primitive_from_smiles(
             "[H:1]-[CH2:2]-*",

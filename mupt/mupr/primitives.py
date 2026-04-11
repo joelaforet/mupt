@@ -51,13 +51,13 @@ from .connection import (
     UnboundConnectorError,
 )
 from .topology import TopologicalStructure, GraphLayout
-from ..roles import PrimitiveRole
 from .embedding import infer_connections_from_topology, ConnectorReference, flexible_connector_reference
 
 from ..mutils.containers import UniqueRegistry
 from ..geometry.shapes import BoundedShape
 from ..geometry.transforms.rigid import RigidlyTransformable
 from ..chemistry.core import ElementLike, isatom, BOND_ORDER, valence_allowed
+from ..roles import PrimitiveRole
 
 
 class AtomicityError(AttributeError):

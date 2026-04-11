@@ -11,12 +11,14 @@ __author__ = "Joseph R. Laforet Jr."
 __email__ = "jola3134@colorado.edu"
 
 import pytest
+from anytree import PreOrderIter
 
+from mupt.chemistry import ELEMENTS
+from mupt.mupr.primitives import Primitive
+from mupt.mupr.properties import has_strict_SAAMR_depth
+from mupt.roles import assign_SAAMR_roles, PrimitiveRole
 from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
 from mupt.interfaces.mdanalysis.strategies import AllAtomExportStrategy
-from mupt.mupr.primitives import Primitive
-from mupt.roles import PrimitiveRole
-from mupt.chemistry import ELEMENTS
 
 
 def count_bonds_in_primitive(univprim):
@@ -182,8 +184,6 @@ def non_SAAMR_hierarchy_non_atom_leaf() -> Primitive:
 def SAAMR_hierarchy_helium() -> Primitive:
     """Minimal valid SAAMR structure for testing resname_map validation.
     Hierarchy: Universe -> Molecule -> Repeat-Unit ('unit') -> He atom."""
-    from mupt.roles import assign_SAAMR_roles
-
     universe = Primitive(label="universe")
     molecule = Primitive(label="mol")
     repeat_unit = Primitive(label="unit")
@@ -207,8 +207,6 @@ def test_mda_export_reject_empty_tree():
     both the ``has_strict_SAAMR_depth`` result and the exporter's
     rejection.
     """
-    from mupt.mupr.properties import has_strict_SAAMR_depth
-
     root_only = Primitive(label="empty")
     assert not has_strict_SAAMR_depth(root_only), (
         "Root-only Primitive should not have strict SAAMR depth"
@@ -565,8 +563,6 @@ class TestDepth4BondedExport:
         self, depth4_bonded_system, polyethylene_resname_map
     ):
         """Exported bond count matches the sum of Primitive internal connections."""
-        from anytree import PreOrderIter
-
         # Depth-agnostic bond count: sum internal_connections at every level
         expected_total = sum(
             len(node.internal_connections)

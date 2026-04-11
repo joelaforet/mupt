@@ -14,21 +14,20 @@ custom export schemes.
 __author__ = "Joseph R. Laforet Jr."
 __email__ = "jola3134@colorado.edu"
 
-import MDAnalysis as mda
-from MDAnalysis.core.topologyattrs import Bonds
+import logging
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
 
 import numpy as np
 from typing import Optional
 from collections import Counter
 
-from ...mupr.primitives import Primitive
+import MDAnalysis as mda
+from MDAnalysis.core.topologyattrs import Bonds
 
 from .strategies import MDAExportStrategy, AllAtomExportStrategy, MDATopologyData
-
-import logging
-
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.DEBUG)
+from ...mupr.primitives import Primitive
 
 
 def _build_mda_universe(data: MDATopologyData) -> mda.Universe:
