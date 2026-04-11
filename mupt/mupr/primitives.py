@@ -179,26 +179,6 @@ class Primitive(NodeMixin, RigidlyTransformable):
         self.metadata['role'] = new_role
 
     @property
-    def is_particle(self) -> bool:
-        '''Whether this Primitive is tagged as an exportable particle'''
-        return self.role == PrimitiveRole.PARTICLE
-
-    @property
-    def is_residue(self) -> bool:
-        '''Whether this Primitive is tagged as a residue-level grouping'''
-        return self.role == PrimitiveRole.RESIDUE
-
-    @property
-    def is_segment(self) -> bool:
-        '''Whether this Primitive is tagged as a segment-level entity'''
-        return self.role == PrimitiveRole.SEGMENT
-
-    @property
-    def is_universe(self) -> bool:
-        '''Whether this Primitive is tagged as the root universe'''
-        return self.role == PrimitiveRole.UNIVERSE
-
-    @property
     def num_atoms(self) -> int:
         '''Number of atomic Primitives collectively present below this Primitive in the hierarchy'''
         return len(findall_by_attr(self, value=True, name='is_atom'))
