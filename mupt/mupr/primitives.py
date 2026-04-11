@@ -110,8 +110,8 @@ class Primitive(NodeMixin, RigidlyTransformable):
         connectors : Optional[Iterable[Connector]]=None,
         children : Optional[Iterable['Primitive']]=None,
         label : Optional[PrimitiveLabel]=None,
-        role : PrimitiveRole=PrimitiveRole.UNASSIGNED,
         metadata : Optional[dict[Hashable, Any]]=None,
+        role : PrimitiveRole=PrimitiveRole.UNASSIGNED,
     ) -> None:
         # essential components
         ## external bounded shape
@@ -140,8 +140,8 @@ class Primitive(NodeMixin, RigidlyTransformable):
         self._external_connectors : dict[ConnectorHandle, ConnectorReference] = dict()
         
         # additional descriptors
+        self._role = role
         self.label = type(self).DEFAULT_LABEL if (label is None) else label
-        self.role = role
         self.metadata = metadata or dict()
         
         
@@ -170,13 +170,13 @@ class Primitive(NodeMixin, RigidlyTransformable):
     @property
     def role(self) -> PrimitiveRole:
         '''Canonical role this Primitive plays in an exportable hierarchy'''
-        return self.metadata.get('role', PrimitiveRole.UNASSIGNED)
+        return self._role
 
     @role.setter
     def role(self, new_role : PrimitiveRole) -> None:
         if not isinstance(new_role, PrimitiveRole):
             raise TypeError(f'Invalid role type {type(new_role)}')
-        self.metadata['role'] = new_role
+        self._role = new_role
 
     @property
     def num_atoms(self) -> int:
